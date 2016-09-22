@@ -1,22 +1,35 @@
 {
-  "name": "switchit",
-  "version": "1.0.0",
-  "description": "Command-line Switcher and Dispatcher",
-  "main": "index.js",
-  "scripts": {
-    "test": "test"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+ssh://git@github.com/dongryphon/switchit.git"
-  },
-  "keywords": [
-    "cli"
-  ],
-  "author": "Don Griffin",
-  "license": "MIT",
-  "bugs": {
-    "url": "https://github.com/dongryphon/switchit/issues"
-  },
-  "homepage": "https://github.com/dongryphon/switchit#readme"
+    "name": "switchit",
+    "version": "1.0.0",
+    "description": "Command-line Switcher and Dispatcher",
+    "homepage": "https://github.com/dongryphon/switchit#readme",
+    "author": "Don Griffin",
+    "license": "MIT",
+
+    "main": "index.js",
+
+    "scripts": {
+        "test": "mocha tests",
+        "lint": "eslint ./src/**/*.js"
+    },
+
+    "repository": {
+        "type": "git",
+        "url": "git+ssh://git@github.com/dongryphon/switchit.git"
+    },
+
+    "keywords": [
+        "cli"
+    ],
+
+    "bugs": {
+        "url": "https://github.com/dongryphon/switchit/issues"
+    },
+
+    "eslintConfig": ".eslintrc.json",
+    "devDependencies": {
+        "assert": "^1.4.1",
+        "eslint": "^3.5.0",
+        "mocha": "^3.0.2"
+    }
 }
