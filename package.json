@@ -1,0 +1,22 @@
+{
+  "name": "switchit",
+  "version": "1.0.0",
+  "description": "Command-line Switcher and Dispatcher",
+  "main": "index.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dongryphon/switchit.git"
+  },
+  "keywords": [
+    "cli"
+  ],
+  "author": "Don Griffin",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/dongryphon/switchit/issues"
+  },
+  "homepage": "https://github.com/dongryphon/switchit#readme"
+}
