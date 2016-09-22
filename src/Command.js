@@ -68,10 +68,13 @@ class Command {
         if (value === undefined) {
             // --param value
             
-            if (typeof params[name] === 'boolean') {
+            if (typeof params[name] !== 'boolean') {
+                value = args.mustPull();
+            }
+            else {
                 // We allow "-foo" to toggle a boolean value if no value is provided
                 value = args.peek();
-                
+
                 if (boolRe.test(value)) {
                     // --bool true|false
                     args.advance();
@@ -80,9 +83,6 @@ class Command {
                 else {
                     value = !params[name];
                 }
-            }
-            else {
-                value = args.mustPull();
             }
         }
         
@@ -94,13 +94,13 @@ class Command {
 
     processConfigParam (args, arg) {
         var parsed = this.parseConfigParam(args, arg);
+        var params = this.params;
 
         if (!parsed) {
             return false;
         }
 
-        //
-
+        params[parsed[0]] = parsed[1];
         return true;
     }
 
