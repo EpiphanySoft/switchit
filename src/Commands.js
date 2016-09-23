@@ -8,8 +8,8 @@ class Commands extends Command {
         return Items.get(this, 'commands');
     }
 
-    static describe (members) {
-        super.describe(members);
+    static define (members) {
+        super.define(members);
 
         var add = members.commands;
 

@@ -1,25 +1,17 @@
 "use strict";
 
-const Switches = require('./Switches');
+const AbstractCommand = require('./AbstractCommand');
+const AbstractCommand = require('./Args');
 
-const paramRe = /^\-{1,2}([a-z_-][\w-]*)$/i;
-const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
-const plusParamRe = /\+([a-z_-][\w-]*)/i;
-const boolRe = /^(?:true|false)$/i;
-const trueRe = /^true$/i;
-const falseRe = /^false$/i;
+class Command extends AbstractCommand {
+    static define (members) {
+        super.define(members);
 
-class Command {
-    static get switches () {
-        return Items.get(this, 'switches');
-    }
-
-    static describe (members) {
-        var add = members.switches;
+        var add = members.commands;
 
         if (add) {
-            var switches = this.switches;
-            switches.addAll(add);
+            var commands = this.commands;
+            commands.addAll(add);
         }
     }
 
@@ -27,81 +19,17 @@ class Command {
         this.params = Object.assign({}, this.switches.values);
     }
 
-    get switches () {
-        return this.constructor.switches;
-    }
-    
-    configure (args) {
-        while (args.more()) {
-            let arg = args.pull();
-            
-            if (!this.processConfigParam(args, arg)) {
-                args.unpull();
-            }
-        }
-    }
-
     dispatch (args) {
         this.configure(args);
-        this.execute(args);
+        this.execute(this.params, args);
     }
 
-    parseConfigParam (args, arg) {
-        var params = this.params,
-            entry, m, name, value;
-        
-        if (!(m = paramRe.exec(arg))) {
-            if (!(m = paramAssignRe.exec(arg))) {
-                if (!(m = plusParamRe.exec(arg))) {
-                    return null;
-                }
-                
-                // +param
-                return [this.switches.canonicalize(m[1]), true];
-            }
-
-            // --param=value
-            value = m[2];
+    processArg (args, arg) {
+        if (super.processArg(args, arg)) {
+            return true;
         }
 
-        name = this.switches.canonicalize(m[1]);
-        if (value === undefined) {
-            // --param value
-            
-            if (typeof params[name] !== 'boolean') {
-                value = args.mustPull();
-            }
-            else {
-                // We allow "-foo" to toggle a boolean value if no value is provided
-                value = args.peek();
-
-                if (boolRe.test(value)) {
-                    // --bool true|false
-                    args.advance();
-                    value = trueRe.test(value);
-                }
-                else {
-                    value = !params[name];
-                }
-            }
-        }
-        
-        entry = this.switches.lookup(name);
-        value = entry.convert(value);
-
-        return [name, value];
-    }
-
-    processConfigParam (args, arg) {
-        var parsed = this.parseConfigParam(args, arg);
-        var params = this.params;
-
-        if (!parsed) {
-            return false;
-        }
-
-        params[parsed[0]] = parsed[1];
-        return true;
+        //
     }
 
     //---------------------------------------------------------------
@@ -109,6 +37,6 @@ class Command {
 }
 
 Command.title = 'Command';
-Command._switches = new Switches(Command, null);
+Command._arguments = new Args(Command, null);
 
 module.exports = Command;

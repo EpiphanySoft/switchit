@@ -22,6 +22,7 @@ class Items {
     constructor (owner, base, kind) {
         this.owner = owner;
         this.base = base || null;
+        this.items = base ? base.items.slice() : [];
         this.map = base ? Object.create(base.map) : {};
         this.kind = base ? base.kind : kind;
         this.values = base ? Object.create(base.values) : {};
@@ -42,6 +43,7 @@ class Items {
 
         item = this.wrap(item);
 
+        this.items.push(item);
         this.map[name] = this.map[item.loname] = item;
         this.values[name] = this.values[item.loname] = item.value;
     }

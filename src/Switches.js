@@ -1,33 +1,9 @@
 "use strict";
 
 const Items = require('./Items');
+const Value = require('./Value');
 
-const converters = {
-    boolean (value) {
-        return Boolean(value);
-    },
-
-    number (value) {
-        return parseFloat(value);
-    },
-
-    string (value) {
-        return String(value);
-    }
-};
-
-class Switch {
-    constructor (config) {
-        Object.assign(this, config);
-    }
-
-    convert (value) {
-        var converter = converters[typeof this.value];
-
-        if (converter) {
-            return converter(value);
-        }
-    }
+class Switch extends Value {
 }
 
 /**
