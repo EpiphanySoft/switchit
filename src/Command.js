@@ -1,7 +1,7 @@
 "use strict";
 
 const AbstractCommand = require('./AbstractCommand');
-const AbstractCommand = require('./Args');
+const Args = require('./Args');
 
 class Command extends AbstractCommand {
     static define (members) {
@@ -16,6 +16,7 @@ class Command extends AbstractCommand {
     }
 
     constructor () {
+        super();
         this.params = Object.assign({}, this.switches.values);
     }
 

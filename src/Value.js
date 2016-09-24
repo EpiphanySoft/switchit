@@ -14,9 +14,18 @@ const converters = {
     }
 };
 
+const defaults = {
+    boolean: false,
+    number: 0,
+    string: ''
+};
+
 class Value {
     constructor (config) {
         Object.assign(this, config);
+        if (this.value == undefined) {
+            this.required = true;
+        }
     }
 
     convert (value) {
@@ -28,6 +37,7 @@ class Value {
     }
 }
 
+Value.defaultValues = defaults;
 Value.converters = converters;
 
 module.exports = Value;

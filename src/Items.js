@@ -1,8 +1,12 @@
 "use strict";
 
+const Value = require('./Value');
+
+const shortHandRe = /^(\[)?([a-z]+[0-9\-_]*)(:(\w+)(=([\w._\-]+))?)?(])?$/i;
+
 /**
  * This class manages a case-insensitive collection of named items for a class. This is
- * used to manage "switches" for Command and "commands" for Commands.
+ * used to manage "switches" and "arguments" for Command and "commands" for Commands.
  * @private
  */
 class Items {
@@ -11,7 +15,7 @@ class Items {
         var ret = owner[key];
 
         if (!owner.hasOwnProperty(key)) {
-            let base = Items.get(Object.getPrototypeOf(this), name);
+            let base = Items.get(Object.getPrototypeOf(owner), name);
 
             owner[key] = ret = new Items(owner, base, name);
         }
@@ -29,7 +33,11 @@ class Items {
     }
 
     add (name, item) {
-        if (item && item.constructor === Object && ('value' in item)) {
+        if (!item) {
+            throw `Item ${name} can't be null or undefined.`;
+        }
+
+        if (item.constructor === Object) {
             item = Object.assign({}, item);
         }
         else {
@@ -49,6 +57,29 @@ class Items {
     }
 
     addAll (all) {
+        if (typeof all === 'string' || all instanceof String) {
+            all = all.split(' ');
+            var matches, item;
+            all = all.map(function (itemStr) {
+                if (shortHandRe.test(itemStr)) {
+                    matches = itemStr.match(shortHandRe);
+                    item = {
+                        optional: !!matches[1] && !!matches[7],
+                        name: matches[2],
+                        type: matches[4] || 'boolean',
+                        value: matches[6]
+                    };
+                    if (item.optional && item.value == undefined) {
+                        item.value = Value.defaultValues[item.type];
+                    }
+                    return item;
+                }
+                else {
+                    throw new Error(`${itemStr} is not a valid shorthand expression`);
+                }
+            });
+        }
+
         for (let name in all) {
             this.add(name, all[name]);
         }
