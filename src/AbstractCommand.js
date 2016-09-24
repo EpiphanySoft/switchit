@@ -1,25 +1,34 @@
 "use strict";
 
+const Items = require('./Items');
 const Switches = require('./Switches');
+const Args = require('./Args');
 
-const paramRe = /^\-{1,2}([a-z_-][\w-]*)$/i;
+const paramRe = /^\-{2}([a-z_-][\w-]*)$/i;
+const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
 const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
-const boolRe = /^(?:true|false)$/i;
-const trueRe = /^true$/i;
-const falseRe = /^false$/i;
+const boolRe = /^(?:true|false|yes|no)$/i;
+const trueRe = /^true|yes$/i;
+const falseRe = /^false|no$/i;
 
 class AbstractCommand {
     static get switches () {
         return Items.get(this, 'switches');
     }
 
-    static define (members) {
-        var add = members.switches;
+    static get args () {
+        return Items.get(this, 'args');
+    }
 
-        if (add) {
+    static define (members) {
+        if (members.switches) {
             var switches = this.switches;
-            switches.addAll(add);
+            switches.addAll(members.switches);
+        }
+        if (members.args){
+            var args = this.args;
+            args.addAll(members.args);
         }
     }
 
@@ -105,5 +114,6 @@ class AbstractCommand {
 
 AbstractCommand.title = 'Command';
 AbstractCommand._switches = new Switches(AbstractCommand, null);
+AbstractCommand._args = new Args(AbstractCommand, null);
 
 module.exports = AbstractCommand;

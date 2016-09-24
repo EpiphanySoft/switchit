@@ -46,14 +46,14 @@ class Pull extends Command {
 Pull.define({
     help: 'Pulls changes from a remote branch',
 
-    //args: 'remote [branch:string]'
-    args: [{
+    args: 'remote [branch:string=master]'
+/*    args: [{
         name: 'remote'
     }, {
         type: 'string', // the default (could be "number" or "boolean")
         name: 'branch',
-        default: ''
-    }]
+        value: ''
+    }]*/
 });
 
 //------------------------------------------

@@ -1,5 +1,5 @@
 module.exports = {
-    Args: require('./src/Args'),
+    Arguments: require('./src/Arguments'),
     Command: require('./src/Command'),
     Commands: require('./src/Commands')
 };
