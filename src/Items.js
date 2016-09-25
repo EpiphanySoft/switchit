@@ -3,14 +3,15 @@
 const Value = require('./Value');
 
 const NAME = '[a-z_]\\w*';
+const VARARG = '((?:\\.\\.\\.)|(?:\\[\\]))?';  // match "type..." or "type[]"
 const itemRe = new RegExp('^\\s*(?:' +
             '(?:\\[' +
                 '(' + NAME + ')' +   // [1]
-                '(?:[:](' + NAME + ')(\\[\\])?)?' +  // [2] optional ":type[]" [3]
+                '(?:[:](' + NAME + ')'+VARARG+')?' +  // [2] optional ":type..." [3]
             ')' +
             '(?:\\[' +
                 '(' + NAME + ')' +   // [4]
-                '(?:[:](' + NAME + ')(\\[\\])?)?' +  // [5] optional ":type[]" [6]
+                '(?:[:](' + NAME + ')'+VARARG+')?' +  // [5] optional ":type..." [6]
                 '(?:[=]([^\\]]+))?' +       // [7] optional "=value"
             '\\])' +
         ')\\s*$', 'i');
