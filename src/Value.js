@@ -40,10 +40,8 @@ class Value {
                 this.type = 'string';
             }
         }
-
-        if (!this.type) {
-            throw new Error(`Unknown value type "${this.type}" (use Types.define to define it)`);
-        }
+        
+        this.verify();
     }
 
     /**
@@ -85,6 +83,12 @@ class Value {
         data[this.name] = v;
 
         this.apply(data, value);
+    }
+    
+    verify () {
+        if (!this.typeOf) {
+            throw new Error(`Unknown value type "${this.type}" (use Types.define to define it)`);
+        }
     }
 
     get typeOf () {

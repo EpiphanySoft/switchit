@@ -9,6 +9,8 @@
     "main": "index.js",
 
     "scripts": {
+        "debug-demo": "node-debug example/demo.js",
+        "demo": "node example/demo.js",
         "test": "mocha tests",
         "lint": "eslint ./src/**/*.js"
     },

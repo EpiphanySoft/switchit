@@ -30,7 +30,7 @@ class Items {
         var ret = owner[key];
 
         if (!owner.hasOwnProperty(key)) {
-            let base = Items.get(Object.getPrototypeOf(owner), name);
+            let base = this.get(Object.getPrototypeOf(owner), name);
 
             owner[key] = ret = new this(owner, base, name);
         }
@@ -42,9 +42,8 @@ class Items {
         this.owner = owner;
         this.base = base || null;
         this.items = base ? base.items.slice() : [];
-        this.map = base ? Object.create(base.map) : {};
         this.kind = base ? base.kind : kind;
-        this.values = base ? Object.create(base.values) : {};
+        this.map = base ? Object.create(base.map) : {};
     }
 
     add (name, item) {

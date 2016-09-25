@@ -16,10 +16,18 @@ class Arguments {
     constructor (args) {
         this._args = args;
         this._index = 0;
+        this._owners = [];
     }
 
     get length () {
         return this._args.length - this._index;
+    }
+
+    get owner () {
+        var owners = this._owners,
+            n = owners.length;
+
+        return n ? owners[n - 1] : null;
     }
 
     get total () {
@@ -78,6 +86,14 @@ class Arguments {
             throw new Error(message || 'Missing required argument');
         }
         return s;
+    }
+
+    ownerPop () {
+        this._owners.pop();
+    }
+
+    ownerPush (owner) {
+        this._owners.push(owner);
     }
 
     peek () {

@@ -13,6 +13,12 @@ class Cmd extends Value {
 
         return cmd;
     }
+
+    verify () {
+        if (!this.type.isCmdlet) {
+            throw new Error(`Invalid command type "${this.type}" (must extend Cmdlet)`);
+        }
+    }
 }
 
 /**
