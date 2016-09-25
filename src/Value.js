@@ -1,43 +1,43 @@
 "use strict";
 
-const converters = {
-    boolean (value) {
-        return Boolean(value);
-    },
-
-    number (value) {
-        return parseFloat(value);
-    },
-
-    string (value) {
-        return String(value);
-    }
-};
-
-const defaults = {
-    boolean: false,
-    number: 0,
-    string: ''
-};
+const Types = require('./Types');
 
 class Value {
     constructor (config) {
         Object.assign(this, config);
-        if (this.value == undefined) {
-            this.required = true;
+
+        this.optional = 'value' in this;
+        this.required = !this.optional;
+
+        if (!this.type) {
+            if (this.required) {
+                this.type = 'string';
+            }
+            else {
+                let def = Types.getTypeOf(this.value);
+
+                if (!def) {
+                    throw new Error(`No type for "${value}" (use Types.define to define it)`);
+                }
+
+                this.type = def.name;
+            }
+        }
+
+        if (!this.typeDef) {
+            throw new Error(`Unknown value type "${this.type}" (use Types.define to define it)`);
         }
     }
 
     convert (value) {
-        var converter = converters[this.type] || converters[typeof this.value];
+        var def = this.typeDef;
 
-        if (converter) {
-            return converter(value);
-        }
+        return def.convert(value);
+    }
+
+    get typeDef () {
+        return Types.defs[this.type];
     }
 }
-
-Value.defaultValues = defaults;
-Value.converters = converters;
 
 module.exports = Value;

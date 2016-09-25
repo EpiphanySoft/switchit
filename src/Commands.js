@@ -28,13 +28,30 @@ class Commands extends Items {
         super(owner, base, 'commands');
     }
 
-    wrap (item) {
+    parseDef (def) {
+        // This method would be called if user calls add('foo') or more likely if they
+        // call:
+        //
+        //      C.define({
+        //          commands: 'foo bar'
+        //      });
+        //
+        // Neither is valid for a command container.
+        //
+        throw new Error(`Missing command definition for ${def}`);
+    }
+
+    parseItem (item) {
         if (item.isCmdlet) {
             item = {
                 type: item
             };
         }
 
+        return item;
+    }
+
+    wrap (item) {
         return new Cmd(item);
     }
 }

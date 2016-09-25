@@ -3,11 +3,19 @@
 const Value = require('./Value');
 
 const NAME = '[a-z_]\\w*';
+const itemRe = new RegExp('^\\s*(?:' +
+            '(?:\\[' +
+                '(' + NAME + ')' +   // [1]
+                '(?:[:](' + NAME + '))?' +  // [2] optional ":type"
+            ')' +
+            '(?:\\[' +
+                '(' + NAME + ')' +   // [3]
+                '(?:[:](' + NAME + '))?' +  // [4] optional ":type"
+                '(?:[=]([^\\]]+))?' +       // [5] optional "=value"
+            '\\])' +
+        ')\\s*$', 'i');
 
-const RE = '(' + NAME + ')|' +
-    '(\\[' + NAME + '\\])';
-
-const shortHandRe = /^(\[)?([a-z]+[0-9\-_]*)(:(\w+)(=([\w._\-]+))?)?(])?$/i;
+//const shortHandRe = /^(\[)?([a-z]+[0-9\-_]*)(:(\w+)(=([\w._\-]+))?)?(])?$/i;
 
 /**
  * This class manages a case-insensitive collection of named items for a class. This is
@@ -39,17 +47,10 @@ class Items {
 
     add (name, item) {
         if (!item) {
-            throw `Item ${name} can't be null or undefined.`;
+            item = this.parseDef(name);
         }
 
-        if (item.constructor === Object) {
-            item = Object.assign({}, item);
-        }
-        else {
-            item = {
-                value: item
-            };
-        }
+        item = this.parseItem(item);
 
         item.name = name;
         item.loname = name.toLowerCase();
@@ -63,32 +64,14 @@ class Items {
 
     addAll (all) {
         if (typeof all === 'string' || all instanceof String) {  // TODO instanceof?
-            let matches, item;
-
             all = all.split(' ');
 
-            all = all.map(function (itemStr) {
-                if (shortHandRe.test(itemStr)) {
-                    matches = itemStr.match(shortHandRe);
-                    item = {
-                        optional: !!matches[1] && !!matches[7],
-                        name: matches[2],
-                        type: matches[4] || 'boolean',
-                        value: matches[6]
-                    };
-                    if (item.optional && item.value == undefined) {
-                        item.value = Value.defaultValues[item.type];
-                    }
-                    return item;
-                }
-                else {
-                    throw new Error(`${itemStr} is not a valid shorthand expression`);
-                }
-            });
+            all.forEach(part => this.add(part));
         }
-
-        for (let name in all) {
-            this.add(name, all[name]);
+        else {
+            for (let name in all) {
+                this.add(name, all[name]);
+            }
         }
     }
     
@@ -139,6 +122,39 @@ class Items {
         }
 
         return ret || null;
+    }
+
+    parseDef (def) {
+        let match = itemRe.exec(def);
+
+        if (!match) {
+            throw new Error(`Invalid parameter syntax definition: "${def}"`);
+        }
+
+        let item = {
+            name: match[1] || match[3],
+            type: match[2] || match[4] || null
+        };
+
+        if (match[3]) { // if (optional)
+            // Only store a value if we have one (this property is detected using
+            // the "in" operator):
+            if (match[5] != null) {
+                item.value = match[5];
+            }
+        }
+
+        return item;
+    }
+
+    parseItem (item) {
+        if (item.constructor !== Object) {
+            item = {
+                value: item
+            };
+        }
+
+        return item;
     }
 
     wrap (item) {
