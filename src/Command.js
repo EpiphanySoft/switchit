@@ -69,18 +69,18 @@ class Command extends Cmdlet {
             }
 
             // Since this param is optional, skip to the next candidate and
-            // try it (this is the only way to advance past an array param):
+            // try it (this is the only way to advance past a vargs param):
             ++this._paramPos;
             return this.processParam(args, arg);
         }
 
         param.set(this.params, value);
 
-        if (!param.array) {
+        if (!param.vargs) {
             ++this._paramPos;
         }
 
-        // if the param is an array, keep accepting valid values for it...
+        // if the param is a vargs, keep accepting valid values for it...
         return true;
     }
 

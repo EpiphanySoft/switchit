@@ -5,18 +5,18 @@ const Value = require('./Value');
 const NAME = '[a-z_]\\w*';
 const VARARG = '((?:\\.\\.\\.)|(?:\\[\\]))?';  // match "type..." or "type[]"
 const itemRe = new RegExp('^\\s*(?:' +
-            '(?:\\[' +
+            '(?:' +
                 '(' + NAME + ')' +   // [1]
                 '(?:[:](' + NAME + ')'+VARARG+')?' +  // [2] optional ":type..." [3]
-            ')' +
+            ')|' +
             '(?:\\[' +
                 '(' + NAME + ')' +   // [4]
                 '(?:[:](' + NAME + ')'+VARARG+')?' +  // [5] optional ":type..." [6]
-                '(?:[=]([^\\]]+))?' +       // [7] optional "=value"
+                '(?:[=]([^\\]]*))?' +       // [7] optional "=value"
             '\\])' +
         ')\\s*$', 'i');
 
-//const shortHandRe = /^(\[)?([a-z]+[0-9\-_]*)(:(\w+)(=([\w._\-]+))?)?(])?$/i;
+// Playground for above: https://jsfiddle.net/yo6m18xr/
 
 /**
  * This class manages a case-insensitive collection of named items for a class. This is
@@ -169,8 +169,18 @@ class Items {
 
     setDefaults (params) {
         for (let item of this.items) {
-            if ('value' in item && !(item.name in params)) {
-                item.set(params, item.value);
+            if (item.optional && !(item.name in params)) {
+                if ('value' in item) {
+                    item.set(params, item.value);
+                }
+                else if (item.vargs) {
+                    // For optional vargs parameters, drop an empty array in the params
+                    // to avoid NPEs (like a rest operator).
+                    params[item.name] = [];
+                }
+                // else we could put the default value for item.type but that would be
+                // hard to distinguish from non-supplied parameters (set item.value if
+                // that is preferred).
             }
         }
     }
