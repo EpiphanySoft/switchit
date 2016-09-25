@@ -63,7 +63,6 @@ class BooleanType extends Type {
     }
 }
 
-/*
 class DateType extends Type {
     constructor () {
         super();
@@ -77,9 +76,11 @@ class DateType extends Type {
     }
 
     is (value) {
+        var s = value && Object.prototype.toString.call(value);
+
+        return s === '[object Date]';
     }
 }
-*/
 
 class NumberType extends Type {
     constructor () {
@@ -117,12 +118,16 @@ class StringType extends Type {
  * @class Types
  * @singleton
  *
- * This class manages a basic type registry for type conversions. Types can be defined
- * by calling `define`
+ * This class manages a basic type registry for type conversions. Types can be added
+ * by calling the `define` method.
  */
 const Types = {
     defs: {},
 
+    /**
+     * Adds a type definition to the registry.
+     * @param {Type} def The `Type` instance of a config object for one.
+     */
     define (def) {
         if (Types.defs[def.name]) {
             throw new Error(`Type already defined: "${def.name}"`);
@@ -139,6 +144,11 @@ const Types = {
         return Types.defs[name] || null;
     },
 
+    /**
+     * Returns the `Type` instance appropriate to the given `value`.
+     * @param {*} value The value to determine.
+     * @return {Type} The `Type` of the `value`.
+     */
     of (value) {
         let def = Types.pick(value, def => def.is(value));
 
@@ -150,10 +160,26 @@ const Types = {
         return def;
     },
 
+    /**
+     * Picks and returns the uniquely matching `Type` that matches the provided `test`
+     * function.
+     * @param {*} [value] A value to describe what is being sought. This is only used for
+     * the `Error` thrown if multiple matches are found. If this value is `null` or not
+     * provided, the array of matching names is returned.
+     * @param {Function} test
+     * @return {Type|String[]} The uniquely matching `Type` or `null` for no matches. If
+     * no `value` is provided and multiple matches are found, the array of matching names
+     * is returned.
+     */
     pick (value, test) {
         let defs = Types.defs;
         let found = null;
         let ambiguous;
+
+        if (!test) {
+            test = value;
+            value = null;
+        }
 
         for (let s in defs) {
             let def = defs[s];
@@ -168,6 +194,9 @@ const Types = {
         }
 
         if (ambiguous) {
+            if (value === null) {
+                return ambiguous;
+            }
             throw new Error(`Ambiguous type for "${value}"; could be: ${ambiguous.join(', ')}`);
         }
 

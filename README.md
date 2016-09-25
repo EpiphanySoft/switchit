@@ -3,7 +3,4 @@ Command-line Switch and Dispatcher
 
 ## Usage
 
-    const { Command } = require('switchit');
-    
-    class Help extends Command {
-    }
+See the [demo](./example/demo.js).

@@ -20,7 +20,8 @@ const itemRe = new RegExp('^\\s*(?:' +
 
 /**
  * This class manages a case-insensitive collection of named items for a class. This is
- * used to manage "switches" and "arguments" for Command and "commands" for Commands.
+ * used to manage "parameters" for Command's and "commands" for Containers as well as
+ * "switches" for both.
  * @private
  */
 class Items {
@@ -56,7 +57,9 @@ class Items {
         item.name = name;
         item.loname = name.toLowerCase();
 
-        item = this.wrap(item);
+        if (!item.isValue) {
+            item = this.wrap(item);
+        }
 
         this.items.push(item);
         this.map[name] = this.map[item.loname] = item;
@@ -167,6 +170,10 @@ class Items {
         return ret || null;
     }
 
+    /**
+     * This method applies default values for missing parameters.
+     * @param {Object} params The parameter data object.
+     */
     setDefaults (params) {
         for (let item of this.items) {
             if (item.optional && !(item.name in params)) {
@@ -184,7 +191,12 @@ class Items {
             }
         }
     }
-    
+
+    /**
+     * This method returns a String describing problem(s) with the given `params`.
+     * @param {Object} params The parameter data object to validate.
+     * @return {String} The problem with the `params` or `null` if there is no problem.
+     */
     validate (params) {
         var missing;
         
@@ -201,8 +213,13 @@ class Items {
         return null;
     }
 
+    /**
+     * Wraps the given config object as a `Value` or derived type.
+     * @param {Object} item The config object for the derived `Value` type.
+     * @return {Value}
+     */
     wrap (item) {
-        return item;
+        return new Value(item);
     }
 }
 

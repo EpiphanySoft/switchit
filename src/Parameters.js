@@ -7,7 +7,7 @@ class Parameter extends Value {
 }
 
 /**
- * This class manages a case-insensitive collection of named positional args.
+ * This class manages a case-insensitive collection of named positional parameters.
  * @private
  */
 class Parameters extends Items {

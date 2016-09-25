@@ -7,6 +7,11 @@ const thenRe = /then/i;
 const andOrThenRe = /and|then/i;
 const expandRe = /^@([\s\.]+)$/;
 
+/**
+ * This class manages the String[] of arguments to be dispatched by Cmdlets. It tracks
+ * the current position of provides many helper methods to simplify the code processing
+ * each argument.
+ */
 class Arguments {
     constructor (args) {
         this._args = args;
@@ -93,6 +98,9 @@ class Arguments {
                 return false;
             }
 
+            // In some cases (like template expansion of arguments) it is easy to get
+            // "and and" or "then and" etc. together so we consume redundant conjunctions
+            // here.
             while (this.atConjunction()) {
                 this.advance();
             }
@@ -101,10 +109,12 @@ class Arguments {
                 return false;
             }
 
+            // Consume redundant "and" conjunctions...
             while (this.atAnd()) {
                 this.advance();
             }
 
+            // Make sure we don't bump into a "then" after all...
             if (this.atThen()) {
                 return false;
             }

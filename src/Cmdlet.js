@@ -9,6 +9,9 @@ const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
 const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
 
+/**
+ * This is the abstract base class for the `Command` and `Container` classes.
+ */
 class Cmdlet {
     static define (members) {
         for (let name in members) {

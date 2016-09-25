@@ -3,6 +3,12 @@
 const EMPTY = [];
 const Types = require('./Types');
 
+/**
+ * This class is the base for each item in an `Items` collection. All `Value` instances
+ * must have a corresponding defined `Type` in the `Types` registry. This can be set by
+ * providing a `type` config property. If no `type` is specified, the `value` (if given)
+ * is used. If neither `type` nor `value` are given, the type defaults to String.
+ */
 class Value {
     constructor (config) {
         Object.assign(this, config);
@@ -50,6 +56,12 @@ class Value {
         // empty
     }
 
+    /**
+     * Converts the given value to the appropriate type. If the value cannot be converted,
+     * `null` is returned.
+     * @param {*} value The value to convert.
+     * @return {*} The `value` suitably converted or `null` if that is not possible.
+     */
     convert (value) {
         var def = this.typeOf;
 
@@ -80,6 +92,7 @@ class Value {
     }
 }
 
+Value.prototype.isValue = true;
 Value.prototype.vargs = false;
 
 module.exports = Value;

@@ -16,7 +16,7 @@ class Cmd extends Value {
 }
 
 /**
- * This class manages a case-insensitive collection of named commands
+ * This class manages a case-insensitive collection of named commands.
  * @private
  */
 class Commands extends Items {
