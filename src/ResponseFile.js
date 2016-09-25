@@ -7,17 +7,11 @@ const commentRe = /^\s*#(.*)$/;
 const crlfRe = /\r\n/g;
 
 module.exports = {
-    read (filename) {
-        var fn = Path.resolve(process.cwd(), filename);
-        
-        var text = fs.readFileSync(fn, {
-            encoding: 'utf8'
-        });
-
+    parse (text) {
         if (crlfRe.test(text)) {
             text = text.replace(crlfRe, '\n');
         }
-        
+
         var lines = text.split('\n'),
             ret = [];
 
@@ -48,5 +42,15 @@ module.exports = {
         }
 
         return ret;
+    },
+
+    read (filename) {
+        var fn = Path.resolve(process.cwd(), filename);
+        
+        var text = fs.readFileSync(fn, {
+            encoding: 'utf8'
+        });
+
+        return module.exports.parse(text);
     }
 };

@@ -119,7 +119,7 @@ class Arguments {
     
     unpull () {
         if (!this._index) {
-            throw new Error('Cannot unpull');
+            throw new Error('No arguments to unpull');
         }
         
         --this._index;
@@ -137,8 +137,10 @@ class Arguments {
 
             // handle @@foo to mean literal @foo
             if (m && (arg = m[1])[0] !== '@') {
-                let lines = ResponseFile.read(arg);
-                args.splice(index, 1, ...lines);
+                // We call out to allow user to hook into the processing of the
+                // response file.
+                let lines = this._readResponseFile(arg, index);
+                this._replaceResponseFileArg(index, lines);
 
                 arg = this._get(index);  // recurse
             }
@@ -151,6 +153,14 @@ class Arguments {
         }
 
         return arg;
+    }
+
+    _readResponseFile (filename) {
+        return ResponseFile.read(filename);
+    }
+
+    _replaceResponseFileArg (index, lines) {
+        this._args.splice(index, 1, ...lines);
     }
 }
 

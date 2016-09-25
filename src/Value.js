@@ -1,5 +1,6 @@
 "use strict";
 
+const EMPTY = [];
 const Types = require('./Types');
 
 class Value {
@@ -14,13 +15,13 @@ class Value {
                 this.type = 'string';
             }
             else {
-                let def = Types.getTypeOf(this.value);
+                let type = Types.of(this.value);
 
-                if (!def) {
+                if (!type) {
                     throw new Error(`No type for "${value}" (use Types.define to define it)`);
                 }
 
-                this.type = def.name;
+                this.type = type.name;
             }
         }
 
@@ -30,14 +31,26 @@ class Value {
     }
 
     convert (value) {
-        var def = this.typeDef;
+        var def = this.typeOf;
 
         return def.convert(value);
     }
 
-    get typeDef () {
+    set (data, value) {
+        if (this.array) {
+            let v = data[this.name];
+
+            value = (v || EMPTY).concat(value);  // handle 4 or [4,5]
+        }
+
+        data[this.name] = value;
+    }
+
+    get typeOf () {
         return Types.defs[this.type];
     }
 }
+
+Value.prototype.array = false;
 
 module.exports = Value;

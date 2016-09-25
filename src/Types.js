@@ -1,13 +1,11 @@
 "use strict";
 
 /**
- * @class switchit.TypeDef
- * @singleton
- *
+ * @class Type
  * This class manages type conversions for a single data type. Instances of this class
  * are created by `Types.define`.
  */
-class TypeDef {
+class Type {
     constructor (config) {
         Object.assign(this, config);
     }
@@ -21,8 +19,102 @@ class TypeDef {
     }
 }
 
+Type.prototype.isType = true;
+
+class BooleanType extends Type {
+    constructor () {
+        super();
+
+        this.anyRe = /^(?:true|false|yes|no|on|off)$/i;
+        this.trueRe = /^(?:true|yes|on)$/i;
+        this.falseRe = /^(?:false|no|off)$/i;
+
+        this.default = false;
+        this.name = 'boolean';
+    }
+
+    convert (value) {
+        var t = typeof value,
+            r = value;
+
+        switch (t) {
+            default:
+                r = String(r);
+
+                if (this.trueRe.test(r)) {
+                    r = true;
+                } else if (this.falseRe.test(r)) {
+                    r = false;
+                } else {
+                    r = null;
+                }
+
+                break;
+
+            case 'boolean':
+                break;
+
+            case 'number':
+                r = !!r;
+                break;
+        }
+
+        return r;
+    }
+}
+
+/*
+class DateType extends Type {
+    constructor () {
+        super();
+
+        this.default = new Date();
+        this.name = 'date';
+    }
+
+    convert (value) {
+        // TODO
+    }
+
+    is (value) {
+    }
+}
+*/
+
+class NumberType extends Type {
+    constructor () {
+        super();
+
+        this.default = 0;
+        this.name = 'number';
+    }
+
+    convert (value) {
+        var r = +value;  // op+ is a strict parser (+'5a' === NaN)
+
+        if (isNaN(r)) {
+            r = null;
+        }
+
+        return r;
+    }
+}
+
+class StringType extends Type {
+    constructor () {
+        super();
+
+        this.default = '';
+        this.name = 'string';
+    }
+
+    convert (value) {
+        return String(value);
+    }
+}
+
 /**
- * @class switchit.Types
+ * @class Types
  * @singleton
  *
  * This class manages a basic type registry for type conversions. Types can be defined
@@ -36,10 +128,18 @@ const Types = {
             throw new Error(`Type already defined: "${def.name}"`);
         }
 
-        Types.defs[def.name] = new TypeDef(def);
+        if (!def.isType) {
+            def = new Type(def);
+        }
+
+        Types.defs[def.name] = def;
     },
 
-    getTypeOf (value) {
+    get (name) {
+        return Types.defs[name] || null;
+    },
+
+    of (value) {
         let def = Types.pick(value, def => def.is(value));
 
         if (!def) {
@@ -75,44 +175,9 @@ const Types = {
     }
 };
 
-Types.define({
-    name: 'boolean',
-    default: false,
-
-    convert (value) {
-        return Boolean(value);
-    }
-});
-
-Types.define({
-    name: 'date',
-    default: new Date(),
-
-    convert (value) {
-        // TODO
-    },
-
-    is (value) {
-        // TODO
-    }
-});
-
-Types.define({
-    name: 'number',
-    default: 0,
-
-    convert (value) {
-        return parseFloat(value);
-    }
-});
-
-Types.define({
-    name: 'string',
-    default: '',
-
-    convert (value) {
-        return String(value);
-    }
-});
+Types.define(new BooleanType());
+//Types.define(new DateType());
+Types.define(new NumberType());
+Types.define(new StringType());
 
 module.exports = Types;

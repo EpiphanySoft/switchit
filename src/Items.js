@@ -6,12 +6,12 @@ const NAME = '[a-z_]\\w*';
 const itemRe = new RegExp('^\\s*(?:' +
             '(?:\\[' +
                 '(' + NAME + ')' +   // [1]
-                '(?:[:](' + NAME + '))?' +  // [2] optional ":type"
+                '(?:[:](' + NAME + ')(\\[\\])?)?' +  // [2] optional ":type[]" [3]
             ')' +
             '(?:\\[' +
-                '(' + NAME + ')' +   // [3]
-                '(?:[:](' + NAME + '))?' +  // [4] optional ":type"
-                '(?:[=]([^\\]]+))?' +       // [5] optional "=value"
+                '(' + NAME + ')' +   // [4]
+                '(?:[:](' + NAME + ')(\\[\\])?)?' +  // [5] optional ":type[]" [6]
+                '(?:[=]([^\\]]+))?' +       // [7] optional "=value"
             '\\])' +
         ')\\s*$', 'i');
 
@@ -46,11 +46,11 @@ class Items {
     }
 
     add (name, item) {
-        if (!item) {
-            item = this.parseDef(name);
+        if (item) {
+            item = this.itemFromValue(item);
+        } else {
+            item = this.itemFromString(name);
         }
-
-        item = this.parseItem(item);
 
         item.name = name;
         item.loname = name.toLowerCase();
@@ -85,6 +85,48 @@ class Items {
         }
 
         return entry.name;
+    }
+
+    /**
+     * This method accepts a string and produces an item config object.
+     * @param {String} def
+     * @return {Object}
+     */
+    itemFromString (def) {
+        let match = itemRe.exec(def);
+
+        if (!match) {
+            throw new Error(`Invalid parameter syntax definition: "${def}"`);
+        }
+
+        let item = {
+            name: match[1] || match[4],
+            type: match[2] || match[5] || null
+        };
+        
+        if (item.type) {
+            item.array = !!(match[3] || match[6]);
+        }
+
+        if (match[4]) { // if (optional)
+            // Only store a value if we have one (this property is detected using
+            // the "in" operator):
+            if (match[7] != null) {
+                item.value = match[7];
+            }
+        }
+
+        return item;
+    }
+
+    itemFromValue (item) {
+        if (item.constructor !== Object) {
+            item = {
+                value: item
+            };
+        }
+
+        return item;
     }
 
     lookup (name) {
@@ -124,37 +166,28 @@ class Items {
         return ret || null;
     }
 
-    parseDef (def) {
-        let match = itemRe.exec(def);
-
-        if (!match) {
-            throw new Error(`Invalid parameter syntax definition: "${def}"`);
-        }
-
-        let item = {
-            name: match[1] || match[3],
-            type: match[2] || match[4] || null
-        };
-
-        if (match[3]) { // if (optional)
-            // Only store a value if we have one (this property is detected using
-            // the "in" operator):
-            if (match[5] != null) {
-                item.value = match[5];
+    setDefaults (params) {
+        for (let item of this.items) {
+            if ('value' in item && !(item.name in params)) {
+                item.set(params, item.value);
             }
         }
-
-        return item;
     }
-
-    parseItem (item) {
-        if (item.constructor !== Object) {
-            item = {
-                value: item
-            };
+    
+    validate (params) {
+        var missing;
+        
+        for (let item of this.items) {
+            if (item.required && !(item.name in params)) {
+                (missing || (missing = [])).push(item.name);
+            }
         }
-
-        return item;
+        
+        if (missing) {
+            return `Missing required ${this.kind}: ${missing.join(', ')}`;
+        }
+        
+        return null;
     }
 
     wrap (item) {

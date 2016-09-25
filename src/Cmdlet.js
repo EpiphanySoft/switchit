@@ -2,22 +2,27 @@
 
 const Arguments = require('./Arguments');
 const Switches = require('./Switches');
+const Types = require('./Types');
 
 const paramRe = /^\-{2}([a-z_-][\w-]*)$/i;
 const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
 const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
-const boolRe = /^(?:true|false|yes|no|on|off)$/i;
-const trueRe = /^(?:true|yes|on)$/i;
-const falseRe = /^(?:false|no|off)$/i;
 
 class Cmdlet {
     static define (members) {
-        var add = members.switches;
+        for (let name in members) {
+            this.defineAspect(name, members[name]);
+        }
+    }
 
-        if (add) {
-            var items = this.switches;
+    static defineAspect (name, value) {
+        if (name === 'switches') {
+            let items = this.switches;
             items.addAll(add);
+        }
+        else {
+            this[name] = value;
         }
     }
 
@@ -26,6 +31,10 @@ class Cmdlet {
     }
     
     //-----------------------------------------------------------
+
+    constructor () {
+        this.params = {};
+    }
 
     get switches () {
         return this.constructor.switches;
@@ -44,6 +53,8 @@ class Cmdlet {
                 args.unpull();
             }
         }
+
+        this.switches.setDefaults(this.params);
     }
 
     destroy () {
@@ -79,21 +90,26 @@ class Cmdlet {
                 // We allow "-foo" to toggle a boolean value if no value is provided
                 value = args.peek();
 
-                if (boolRe.test(value)) {
-                    // --bool true|false|...
-                    args.advance();
-                    value = trueRe.test(value);
+                let bv = Types.boolean.convert(value);
+                if (bv === null) {
+                    value = !params[name];
                 }
                 else {
-                    value = !params[name];
+                    // --bool true|false|...
+                    args.advance();
+                    value = bv;
                 }
             }
         }
         
         entry = this.switches.lookup(name);
-        value = entry.convert(value);
+        let v = entry.convert(value);
 
-        return [name, value];
+        if (v === null) {
+            this.raise(`Invalid ${entry.type} value for ${name}: "${value}"`);
+        }
+
+        return [entry, v];
     }
 
     processArg (args, arg) {
@@ -108,18 +124,21 @@ class Cmdlet {
             return false;
         }
 
-        params[parsed[0]] = parsed[1];  // TODO call user fn
+        // Delegate the act of putting the value into the params map over to the
+        // Switch instance.
+        parsed[0].set(params, parsed[1]);
         return true;
     }
 
+    raise (msg) {
+        //TODO include context info like:
+        //      ... while processing 'foo' switch for 'bar blerp'
+
+        throw new Error(msg);
+    }
+
     root () {
-        var parent = this;
-
-        while (parent.parent) {
-            parent = parent.parent;
-        }
-
-        return parent;
+        return this.up(p => !p.parent) || this;  // ||this since we may be the root
     }
 
     run (...args) {
@@ -134,12 +153,21 @@ class Cmdlet {
 
     up (name) {
         var parent = this.parent;
+        var is = (typeof name === 'function') ? name : (p => !name || p.name === name);
 
-        while (parent && name && parent.name !== name) {
+        while (parent && !is(parent)) {
             parent = parent.parent;
         }
 
         return parent;
+    }
+    
+    validate (params) {
+        var err = this.switches.validate(params || this.params);
+
+        if (err) {
+            this.raise(err);
+        }
     }
 
     //---------------------------------------------------------------

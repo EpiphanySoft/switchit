@@ -3,15 +3,14 @@
 const Cmdlet = require('./Cmdlet');
 const Commands = require('./Commands');
 
-class Container extends Cmdlet1 {
-    static define (members) {
-        super.define(members);
-
-        var add = members.commands;
-
-        if (add) {
+class Container extends Cmdlet {
+    static defineAspect (name, value) {
+        if (name === 'commands') {
             var items = this.commands;
-            items.addAll(add);
+            items.addAll(value);
+        }
+        else {
+            super.defineAspect(name, value);
         }
     }
 
@@ -62,9 +61,16 @@ class Container extends Cmdlet1 {
     }
 }
 
-Container.title = 'Command category';
-Container._commands = new Commands(Container);
+Object.assign(Container, {
+    isContainer: true,
+    title: 'Command container',
 
-Container.prototype.parent = null;
+    _commands: new Commands(Container)
+});
+
+Object.assign(Command.prototype, {
+    isContainer: true,
+    parent: null
+});
 
 module.exports = Container;

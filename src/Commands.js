@@ -28,7 +28,7 @@ class Commands extends Items {
         super(owner, base, 'commands');
     }
 
-    parseDef (def) {
+    itemFromString (def) {
         // This method would be called if user calls add('foo') or more likely if they
         // call:
         //
@@ -41,7 +41,7 @@ class Commands extends Items {
         throw new Error(`Missing command definition for ${def}`);
     }
 
-    parseItem (item) {
+    itemFromValue (item) {
         if (item.isCmdlet) {
             item = {
                 type: item
