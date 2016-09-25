@@ -1,39 +1,39 @@
 "use strict";
 
-const Items = require('./Items');
+const Arguments = require('./Arguments');
 const Switches = require('./Switches');
-const Args = require('./Args');
 
 const paramRe = /^\-{2}([a-z_-][\w-]*)$/i;
 const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
 const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
-const boolRe = /^(?:true|false|yes|no)$/i;
-const trueRe = /^true|yes$/i;
-const falseRe = /^false|no$/i;
+const boolRe = /^(?:true|false|yes|no|on|off)$/i;
+const trueRe = /^(?:true|yes|on)$/i;
+const falseRe = /^(?:false|no|off)$/i;
 
-class AbstractCommand {
-    static get switches () {
-        return Items.get(this, 'switches');
-    }
-
-    static get args () {
-        return Items.get(this, 'args');
-    }
-
+class Cmdlet {
     static define (members) {
-        if (members.switches) {
-            var switches = this.switches;
-            switches.addAll(members.switches);
-        }
-        if (members.args){
-            var args = this.args;
-            args.addAll(members.args);
+        var add = members.switches;
+
+        if (add) {
+            var items = this.switches;
+            items.addAll(add);
         }
     }
+
+    static get switches () {
+        return Switches.get(this);
+    }
+    
+    //-----------------------------------------------------------
 
     get switches () {
         return this.constructor.switches;
+    }
+
+    attach (parent, name) {
+        this.parent = parent;
+        this.name = name;
     }
     
     configure (args) {
@@ -44,6 +44,10 @@ class AbstractCommand {
                 args.unpull();
             }
         }
+    }
+
+    destroy () {
+        // template method
     }
 
     parseSwitch (args, arg) {
@@ -76,7 +80,7 @@ class AbstractCommand {
                 value = args.peek();
 
                 if (boolRe.test(value)) {
-                    // --bool true|false
+                    // --bool true|false|...
                     args.advance();
                     value = trueRe.test(value);
                 }
@@ -104,16 +108,52 @@ class AbstractCommand {
             return false;
         }
 
-        params[parsed[0]] = parsed[1];
+        params[parsed[0]] = parsed[1];  // TODO call user fn
         return true;
+    }
+
+    root () {
+        var parent = this;
+
+        while (parent.parent) {
+            parent = parent.parent;
+        }
+
+        return parent;
+    }
+
+    run (...args) {
+        var a = args[0];
+
+        if (args.length === 1 && Array.isArray(a)) {
+            args = a;
+        }
+
+        return this.dispatch(new Arguments(args));
+    }
+
+    up (name) {
+        var parent = this.parent;
+
+        while (parent && name && parent.name !== name) {
+            parent = parent.parent;
+        }
+
+        return parent;
     }
 
     //---------------------------------------------------------------
     // Private
 }
 
-AbstractCommand.title = 'Command';
-AbstractCommand._switches = new Switches(AbstractCommand, null);
-AbstractCommand._args = new Args(AbstractCommand, null);
+Object.assign(Cmdlet, {
+    isCmdlet: true,
 
-module.exports = AbstractCommand;
+    _switches: new Switches(Cmdlet)
+});
+
+Object.assign(Cmdlet.prototype, {
+    isCmdlet: true
+});
+
+module.exports = Cmdlet;

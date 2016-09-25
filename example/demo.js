@@ -1,12 +1,12 @@
 const {
     Arguments,
     Command,
-    Commands
+    Container
     } = require('../index.js'); //require('switchit');
 
 class Commit extends Command {
     execute (params) {
-        console.log(`Commit changes... "${params.message}"`);
+        console.log(`${this.name}... "${params.message}"`);
     }
 }
 
@@ -25,29 +25,29 @@ Commit.define({
 
 class Fetch extends Command {
     execute (params) {
-        console.log(`Fetch... "${params.remote}"`);
+        console.log(`${this.name}... "${params.remote}"`);
     }
 }
 
 Fetch.define({
     help: 'Fetches changes from a remote',
 
-    args: 'remote'
+    parameters: 'remote'
 });
 
 //------------------------------------------
 
 class Pull extends Command {
     execute (params) {
-        console.log(`Pull... "${params.remote}/${params.branch}"`);
+        console.log(`${this.name}... "${params.remote}/${params.branch}"`);
     }
 }
 
 Pull.define({
     help: 'Pulls changes from a remote branch',
 
-    args: 'remote [branch:string=master]'
-/*    args: [{
+    parameters: 'remote [branch:string=master]'
+/*    parameters: [{
         name: 'remote'
     }, {
         type: 'string', // the default (could be "number" or "boolean")
@@ -58,7 +58,7 @@ Pull.define({
 
 //------------------------------------------
 
-class Git extends Commands {
+class Git extends Container {
     //
 }
 
@@ -76,4 +76,5 @@ Git.define({
 
 const git = new Git();
 
-git.dispatch(new Arguments([ 'commit', '-m', 'foobar' ]));
+//git.dispatch(new Arguments([ 'commit', '-m', 'foobar' ]));
+git.run('commit', '-m', 'foobar');

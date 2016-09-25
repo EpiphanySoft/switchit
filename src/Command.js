@@ -1,23 +1,34 @@
 "use strict";
 
-const AbstractCommand = require('./AbstractCommand');
-const Args = require('./Args');
+const Cmdlet = require('./Cmdlet');
+const Parameters = require('./Parameters');
 
-class Command extends AbstractCommand {
+class Command extends Cmdlet {
     static define (members) {
         super.define(members);
 
-        var add = members.commands;
+        var add = members.parameters;
 
         if (add) {
-            var commands = this.commands;
-            commands.addAll(add);
+            var items = this.parameters;
+            items.addAll(add);
         }
     }
 
+    static get parameters () {
+        return Parameters.get(this);
+    }
+
+    //-----------------------------------------------------------
+
     constructor () {
         super();
-        this.params = Object.assign({}, this.switches.values);
+
+        var params = this.params = Object.assign({}, this.switches.values);
+    }
+
+    get parameters () {
+        return this.constructor.parameters;
     }
 
     dispatch (args) {
@@ -38,6 +49,6 @@ class Command extends AbstractCommand {
 }
 
 Command.title = 'Command';
-Command._arguments = new Args(Command, null);
+Command._parameters = new Parameters(Command);
 
 module.exports = Command;

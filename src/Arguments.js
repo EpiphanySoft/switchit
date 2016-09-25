@@ -87,6 +87,32 @@ class Arguments {
         return ret;
     }
 
+    pullConjunction (both) {
+        if (both) {
+            if (!this.atConjunction()) {
+                return false;
+            }
+
+            while (this.atConjunction()) {
+                this.advance();
+            }
+        } else {
+            if (!this.atAnd()) {
+                return false;
+            }
+
+            while (this.atAnd()) {
+                this.advance();
+            }
+
+            if (this.atThen()) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
     rewind () {
         this._index = 0;
     }

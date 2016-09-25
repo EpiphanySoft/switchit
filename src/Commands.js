@@ -1,30 +1,42 @@
 "use strict";
 
-const Command = require('./Command');
 const Items = require('./Items');
+const Value = require('./Value');
 
-class Commands extends Command {
-    static get commands () {
-        return Items.get(this, 'commands');
-    }
+class Cmd extends Value {
+    create (parent) {
+        var cmd = new this.type();
 
-    static define (members) {
-        super.define(members);
-
-        var add = members.commands;
-
-        if (add) {
-            var commands = this.commands;
-            commands.addAll(add);
+        if (parent) {
+            cmd.attach(parent, this.name);
         }
-    }
 
-    dispatch (args) {
-        this.configure(args);
+        return cmd;
     }
 }
 
-Commands.title = 'Command category';
-Commands._commands = new Items(Commands, null, 'commands');
+/**
+ * This class manages a case-insensitive collection of named commands
+ * @private
+ */
+class Commands extends Items {
+    static get (owner) {
+        return super.get(owner, 'commands');
+    }
+
+    constructor (owner, base) {
+        super(owner, base, 'commands');
+    }
+
+    wrap (item) {
+        if (item.isCmdlet) {
+            item = {
+                type: item
+            };
+        }
+
+        return new Cmd(item);
+    }
+}
 
 module.exports = Commands;

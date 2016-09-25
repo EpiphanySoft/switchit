@@ -11,6 +11,10 @@ class Switch extends Value {
  * @private
  */
 class Switches extends Items {
+    static get (owner) {
+        return super.get(owner, 'switches');
+    }
+
     constructor (owner, base) {
         super(owner, base, 'switches');
     }

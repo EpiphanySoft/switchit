@@ -2,6 +2,11 @@
 
 const Value = require('./Value');
 
+const NAME = '[a-z_]\\w*';
+
+const RE = '(' + NAME + ')|' +
+    '(\\[' + NAME + '\\])';
+
 const shortHandRe = /^(\[)?([a-z]+[0-9\-_]*)(:(\w+)(=([\w._\-]+))?)?(])?$/i;
 
 /**
@@ -17,7 +22,7 @@ class Items {
         if (!owner.hasOwnProperty(key)) {
             let base = Items.get(Object.getPrototypeOf(owner), name);
 
-            owner[key] = ret = new Items(owner, base, name);
+            owner[key] = ret = new this(owner, base, name);
         }
 
         return ret;
@@ -57,9 +62,11 @@ class Items {
     }
 
     addAll (all) {
-        if (typeof all === 'string' || all instanceof String) {
+        if (typeof all === 'string' || all instanceof String) {  // TODO instanceof?
+            let matches, item;
+
             all = all.split(' ');
-            var matches, item;
+
             all = all.map(function (itemStr) {
                 if (shortHandRe.test(itemStr)) {
                     matches = itemStr.match(shortHandRe);

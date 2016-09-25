@@ -3,21 +3,25 @@
 const Items = require('./Items');
 const Value = require('./Value');
 
-class Arg extends Value {
+class Parameter extends Value {
 }
 
 /**
  * This class manages a case-insensitive collection of named positional args.
  * @private
  */
-class Args extends Items {
+class Parameters extends Items {
+    static get (owner) {
+        return super.get(owner, 'parameters');
+    }
+
     constructor (owner, base) {
-        super(owner, base, 'arguments');
+        super(owner, base, 'parameters');
     }
 
     wrap (item) {
-        return new Arg(item);
+        return new Parameter(item);
     }
 }
 
-module.exports = Args;
+module.exports = Parameters;
