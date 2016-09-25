@@ -41,7 +41,7 @@ class Value {
             }
         }
 
-        if (!this.typeOf) {
+        if (!this.type) {
             throw new Error(`Unknown value type "${this.type}" (use Types.define to define it)`);
         }
     }

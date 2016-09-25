@@ -63,6 +63,7 @@ class Git extends Container {
 }
 
 Git.define({
+    title: '"git" command',
     commands: {
         commit: Commit,
         fetch: {

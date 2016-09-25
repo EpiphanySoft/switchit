@@ -68,7 +68,7 @@ Object.assign(Container, {
     _commands: new Commands(Container)
 });
 
-Object.assign(Command.prototype, {
+Object.assign(Commands.prototype, {
     isContainer: true,
     parent: null
 });

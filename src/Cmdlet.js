@@ -4,7 +4,7 @@ const Arguments = require('./Arguments');
 const Switches = require('./Switches');
 const Types = require('./Types');
 
-const paramRe = /^\-{2}([a-z_-][\w-]*)$/i;
+const paramRe = /^\-{1,2}([a-z_-][\w-]*)$/i;
 const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
 const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
@@ -22,7 +22,7 @@ class Cmdlet {
     static defineAspect (name, value) {
         if (name === 'switches') {
             let items = this.switches;
-            items.addAll(add);
+            items.addAll(value);
         }
         else {
             this[name] = value;
@@ -54,6 +54,7 @@ class Cmdlet {
             
             if (!this.processArg(args, arg)) {
                 args.unpull();
+                break;
             }
         }
 
