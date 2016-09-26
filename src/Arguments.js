@@ -11,6 +11,9 @@ const expandRe = /^@([\s\.]+)$/;
  * This class manages the String[] of arguments to be dispatched by Cmdlets. It tracks
  * the current position of provides many helper methods to simplify the code processing
  * each argument.
+ *
+ * Instances of this class are owned by the `Cmdlet` dispatch mechanism. The `owner`
+ * property will return the currently executing `Cmdlet`.
  */
 class Arguments {
     constructor (args) {
@@ -88,8 +91,10 @@ class Arguments {
         return s;
     }
 
-    ownerPop () {
-        this._owners.pop();
+    ownerPop (owner) {
+        if (!owner || owner === this.owner) {
+            this._owners.pop();
+        }
     }
 
     ownerPush (owner) {

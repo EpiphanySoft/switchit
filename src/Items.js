@@ -62,7 +62,6 @@ class Items {
 
         this.items.push(item);
         this.map[name] = this.map[item.loname] = item;
-        this.values[name] = this.values[item.loname] = item.value;
     }
 
     addAll (all) {

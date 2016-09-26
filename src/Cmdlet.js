@@ -36,6 +36,7 @@ class Cmdlet {
     //-----------------------------------------------------------
 
     constructor () {
+        this.id = ++Cmdlet.idSeed;
         this.params = {};
     }
 
@@ -49,6 +50,8 @@ class Cmdlet {
     }
     
     configure (args) {
+        args.ownerPush(this);
+
         while (args.more()) {  // while (!atEnd && !atAnd && !atThen) {
             let arg = args.pull();
             
@@ -62,8 +65,39 @@ class Cmdlet {
     }
 
     destroy () {
-        // template method
+        var parent = this.parent;
+
+        if (parent) {
+            this.parent = null;
+
+            if (parent.child === this) {
+                parent.child = null;
+            }
+        }
     }
+
+    down (name) {
+        var candidate = this.child;
+        var is = (typeof name === 'function') ? name : (c => !name || c.name === name);
+
+        while (candidate && !is(candidate)) {
+            candidate = candidate.child;
+        }
+
+        return candidate;
+    }
+
+    leaf () {
+        return this.down(c => !c.child) || this;  // ||this since we may be the leaf
+    }
+
+    /**
+     * @method dispatch
+     * This method executes the commands described in the `Arguments` object. This method
+     * is typically called via the `run` method.
+     * @param {Arguments} args The `Arguments` instance containing the arguments to run.
+     * @return {Promise} The Promise that resolves with the command result.
+     */
 
     parseSwitch (args, arg) {
         var params = this.params,
@@ -145,6 +179,13 @@ class Cmdlet {
         return this.up(p => !p.parent) || this;  // ||this since we may be the root
     }
 
+    /**
+     * This method executes the commands described by the provided string arguments. This
+     * method wraps the strings in an `Arguments` instance and delegates the work to the
+     * `dispatch` method.
+     * @param {String...} args The arguments to run.
+     * @return {Promise} The Promise that resolves with the command result.
+     */
     run (...args) {
         var a = args[0];
 
@@ -156,14 +197,14 @@ class Cmdlet {
     }
 
     up (name) {
-        var parent = this.parent;
-        var is = (typeof name === 'function') ? name : (p => !name || p.name === name);
+        var candidate = this.parent;
+        var is = (typeof name === 'function') ? name : (c => !name || c.name === name);
 
-        while (parent && !is(parent)) {
-            parent = parent.parent;
+        while (candidate && !is(candidate)) {
+            candidate = candidate.parent;
         }
 
-        return parent;
+        return candidate;
     }
     
     validate (params) {
@@ -180,12 +221,16 @@ class Cmdlet {
 
 Object.assign(Cmdlet, {
     isCmdlet: true,
+    idSeed: 0,
 
     _switches: new Switches(Cmdlet)
 });
 
 Object.assign(Cmdlet.prototype, {
-    isCmdlet: true
+    isCmdlet: true,
+
+    child: null,
+    parent: null
 });
 
 module.exports = Cmdlet;

@@ -25,39 +25,49 @@ class Container extends Cmdlet {
     }
 
     dispatch (args) {
-        var both = !this.parent;
-        var first = true;
-        
-        do {
-            this.configure(args);
-            
+        var me = this;
+
+        return new Promise((resolve, reject) => {
+            me.configure(args);
+
             let arg = args.pull();
 
             if (!arg) {
-                if (first) {
-                    //TODO new HelpCommand().attach(this, "help").dispatch(arguments);
-                }
-            } else {
-                let entry = this.commands.lookup(arg);
-
-                if (entry) {
-                    let cmd = entry.create(this);
-
-                    try {
-                        cmd.dispatch(args);
-                    }
-                    finally {
-                        cmd.destroy();
-                    }
-                }
-                else {
-                    //TODO
-                }
+                //TODO new HelpCommand().attach(me, "help").dispatch(arguments);
+                args.ownerPop(me);
+                resolve(0);
+                return;
             }
 
-            first = false;
+            let entry = me.commands.lookup(arg);
 
-        } while (args.pullConjunction(both));
+            if (!entry) {
+                args.ownerPop(me);
+                reject(new Error(`No such command "${arg}"`)); //TODO full cmd path
+                return;
+            }
+
+            let cmd = entry.create(me);
+
+            cmd.dispatch(args).then(v => {
+                cmd.destroy();
+                args.ownerPop(me);
+
+                if (args.pullConjunction(!me.parent) && !args.atEnd()) {
+                    // If this command ended with an appropriate conjunction ("and" or
+                    // "then" keyword) and there are more arguments to process, call
+                    // back to our dispatch() method to go around again.
+                    resolve(me.dispatch(args));
+                } else {
+                    resolve(v);
+                }
+            },
+            err => {
+                cmd.destroy();
+                args.ownerPop(me);
+                reject(err);
+            });
+        });
     }
 }
 
@@ -69,8 +79,7 @@ Object.assign(Container, {
 });
 
 Object.assign(Container.prototype, {
-    isContainer: true,
-    parent: null
+    isContainer: true
 });
 
 module.exports = Container;

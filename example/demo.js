@@ -1,12 +1,28 @@
+// const {
+//         Command,
+//         Container
+//     } = require('switchit');
+
 const {
-    Arguments,
-    Command,
-    Container
-    } = require('../index.js'); //require('switchit');
+        Command,
+        Container
+    } = require('../index.js');
+
+function delay (ms) {
+    return new Promise(resolve => {
+        setTimeout(x => resolve(), ms);
+    });
+}
+
 
 class Commit extends Command {
     execute (params) {
-        console.log(`${this.name}... "${params.message}"`);
+        console.log(`${this.name}... "${params.message}"`, params);
+
+        return delay(100).then(() => {
+            console.log('tick');
+            return 42;
+        });
     }
 }
 
@@ -77,5 +93,10 @@ Git.define({
 
 const git = new Git();
 
-//git.dispatch(new Arguments([ 'commit', '-m', 'foobar' ]));
-git.run('commit', '-m', 'foobar');
+console.log('aa');
+
+git.run('commit', '-m', 'foobar', 'and', 'commit').then(v => {
+    console.log('result', v);
+});
+
+console.log('bb');

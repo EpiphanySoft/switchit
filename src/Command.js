@@ -38,9 +38,20 @@ class Command extends Cmdlet {
     }
 
     dispatch (args) {
-        this.configure(args);
-        this.validate(this.params);
-        this.execute(this.params, args);
+        var me = this;
+
+        me.configure(args);
+
+        me.validate(this.params);
+
+        return Promise.resolve(me.execute(me.params, args)).then(r => {
+            args.ownerPop(me);
+            return r;
+        },
+        e => {
+            args.ownerPop(me);
+            throw e;
+        });
     }
 
     processArg (args, arg) {
