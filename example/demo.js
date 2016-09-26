@@ -101,6 +101,10 @@ const git = new Git();
 //console.log(process.argv);
 
 if (process.argv.length > 2) {
+    // Try running:
+    //
+    //      npm run demo -- commit -m 'foobar'
+    //
     //console.log(process.argv.slice(2));
 
     git.run(process.argv.slice(2)).then(v => {
