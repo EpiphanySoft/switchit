@@ -10,7 +10,68 @@ const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
 
 /**
- * This is the abstract base class for the `Command` and `Container` classes.
+ * This is the abstract base class for the `Command` and `Container` classes. All
+ * Cmdlets have a set of `switches` tracked at the class level.
+ *
+ * Instances of Cmdlets have a `parent` reference to the Cmdlet instance that created it.
+ * The top-most Cmdlet will have a `null` value for its `parent` and it is said to be the
+ * root. Since only one Cmdlet can be active at a time, Cmdlets can also have a `child`
+ * reference.
+ *
+ * Given a three level command invocation like this:
+ *
+ *      foo bar zip
+ *
+ * There are 3 Cmdlets: "foo", "bar" and "zip". The first two are `Container` instances
+ * while the last is a `Command` instance.
+ *
+ *      foo.down()      === bar
+ *      foo.down('zip') === zip
+ *      foo.leaf()      === zip
+ *
+ *      bar.up()   === foo
+ *      bar.root() === foo
+ *      bar.down() === zip
+ *      bar.leaf() === zip
+ *
+ *      zip.up()      === bar
+ *      zip.up('foo') === foo
+ *      zip.root()    === foo
+ *
+ * Or visually:
+ *
+ *      Container               Container                Command
+ *      +=======+    child      +=======+    child      +=======+
+ *      |       | ------------> |       | ------------> |       |
+ *      |  foo  |               |  bar  |               |  zip  |
+ *      |       | <------------ |       | <------------ |       |
+ *      +=======+    parent     +=======+    parent     +=======+
+ *
+ *        .down() --------------> .
+ *
+ *        .down('zip') ---------------------------------> .
+ *
+ *        .leaf() --------------------------------------> .
+ *
+ *        . <-------------------- .up()
+ *
+ *        . <-------------------- .root()
+ *
+ *                                .down() --------------> .
+ *
+ *                                .leaf() --------------> .
+ *
+ *                                . <-------------------- .up()
+ *
+ *        . <-------------------------------------------- .up('foo')
+ *
+ *        . <-------------------------------------------- .root()
+ *
+ * As instances are created to process arguments, they are attached to this chain as well
+ * as pushed on to the `owner` stack of the associated `Arguments` instance.
+ *
+ * As instances are cleaned up (via `destroy`), they are detached from this chain and
+ * popped off the `Arguments` ownership stack.
  */
 class Cmdlet {
     static define (members) {

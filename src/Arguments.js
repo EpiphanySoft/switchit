@@ -93,12 +93,16 @@ class Arguments {
 
     ownerPop (owner) {
         if (!owner || owner === this.owner) {
-            this._owners.pop();
+            var o = this._owners.pop();
+            if (o) {
+                o.args = null;
+            }
         }
     }
 
     ownerPush (owner) {
         this._owners.push(owner);
+        owner.args = this;
     }
 
     peek () {
