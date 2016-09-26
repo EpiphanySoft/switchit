@@ -93,6 +93,14 @@ class Cmdlet {
     static get switches () {
         return Switches.get(this);
     }
+
+    static get title () {
+        return this._title || this.name;
+    }
+
+    static set title (v) {
+        this._title = v;
+    }
     
     //-----------------------------------------------------------
 
@@ -101,6 +109,14 @@ class Cmdlet {
         this.params = {};
     }
 
+    get fullName () {
+        var s = this.parent;
+        
+        s = s ? s.fullName + ' ' : '';
+        
+        return s + (this.name || this.constructor.title);
+    }
+    
     get switches () {
         return this.constructor.switches;
     }
@@ -244,17 +260,21 @@ class Cmdlet {
      * This method executes the commands described by the provided string arguments. This
      * method wraps the strings in an `Arguments` instance and delegates the work to the
      * `dispatch` method.
-     * @param {String...} args The arguments to run.
+     * @param {Arguments/String...} args The arguments to run.
      * @return {Promise} The Promise that resolves with the command result.
      */
     run (...args) {
         var a = args[0];
 
-        if (args.length === 1 && Array.isArray(a)) {
-            args = a;
+        if (args.length === 1) {
+            if (a.isArguments || Array.isArray(a)) {
+                args = a;
+            }
         }
 
-        return this.dispatch(new Arguments(args));
+        a = args.isArguments ? args : new Arguments(args);
+
+        return this.dispatch(a);
     }
 
     up (name) {

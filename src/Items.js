@@ -70,11 +70,40 @@ class Items {
 
             all.forEach(part => this.add(part));
         }
-        else {
-            for (let name in all) {
-                this.add(name, all[name]);
+        else if (Array.isArray(all)) {
+            for (let item of all) {
+                this.add(item.name, item);
             }
         }
+        else {
+            for (let name in all) {
+                let item = all[name];
+
+                if (typeof item !== 'string') {
+                    this.add(name, item);
+                }
+            }
+
+            for (let name in all) {
+                let item = all[name];
+
+                if (typeof item === 'string') {
+                    this.alias(name, item);
+                }
+            }
+        }
+    }
+    
+    alias (alias, actualName) {
+        var map = this.map,
+            item = map[actualName],
+            loname = alias.toLowerCase();
+        
+        if (!item) {
+            throw new Error(`No such command "${actualName}" for alias "${alias}"`);
+        }
+
+        map[alias] = map[loname] = item;
     }
     
     canonicalize (name) {
@@ -138,10 +167,19 @@ class Items {
         ret = map[name] || map[loname = name.toLowerCase()];
 
         if (!ret) {
+            let ignore = {};
+            
             for (let key in map) {
                 entry = map[key];
 
-                if (entry.loname.startsWith(loname)) {
+                if (ignore[entry.name]) {
+                    // ignore aliases for the same thing (ex "fooBar" and "foobar")
+                    continue;
+                }
+                
+                ignore[entry.name] = true;
+
+                if (key.startsWith(loname) || key.startsWith(name)) {
                     if (!ret) {
                         first = key;
                         ret = entry;

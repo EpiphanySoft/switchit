@@ -111,7 +111,6 @@ class Command extends Cmdlet {
 
 Object.assign(Command, {
     isCommand: true,
-    title: 'Command',
 
     _parameters: new Parameters(Command)
 });

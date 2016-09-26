@@ -199,4 +199,6 @@ class Arguments {
     }
 }
 
+Arguments.prototype.isArguments = true;
+
 module.exports = Arguments;

@@ -4,8 +4,10 @@
 //     } = require('switchit');
 
 const {
+        Arguments,
         Command,
-        Container
+        Container,
+        Help
     } = require('../index.js');
 
 function delay (ms) {
@@ -17,7 +19,7 @@ function delay (ms) {
 
 class Commit extends Command {
     execute (params) {
-        console.log(`${this.name}... "${params.message}"`, params);
+        console.log(`${this.fullName}... "${params.message}"`, params);
 
         return delay(100).then(() => {
             console.log('tick');
@@ -66,8 +68,8 @@ Pull.define({
 /*    parameters: [{
         name: 'remote'
     }, {
-        type: 'string', // the default (could be "number" or "boolean")
         name: 'branch',
+        type: 'string', // the default (could be "number" or "boolean")
         value: ''
     }]*/
 });
@@ -79,8 +81,11 @@ class Git extends Container {
 }
 
 Git.define({
-    title: '"git" command',
+    title: 'git',
     commands: {
+        '?': 'help',
+
+        help: Help,
         commit: Commit,
         fetch: {
             type: Fetch
@@ -93,10 +98,21 @@ Git.define({
 
 const git = new Git();
 
-console.log('aa');
+//console.log(process.argv);
 
-git.run('commit', '-m', 'foobar', 'and', 'commit').then(v => {
-    console.log('result', v);
-});
+if (process.argv.length > 2) {
+    //console.log(process.argv.slice(2));
 
-console.log('bb');
+    git.run(process.argv.slice(2)).then(v => {
+        console.log('exit', v);
+    });
+}
+else {
+    console.log('aa', process.argv);
+
+    git.run('commit', '-m', 'foobar', 'and', 'commit').then(v => {
+        console.log('result', v);
+    });
+
+    console.log('bb');
+}

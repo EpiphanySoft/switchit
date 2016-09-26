@@ -73,7 +73,6 @@ class Container extends Cmdlet {
 
 Object.assign(Container, {
     isContainer: true,
-    title: 'Command container',
 
     _commands: new Commands(Container)
 });
