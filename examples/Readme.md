@@ -17,8 +17,8 @@ This directory contains all the examples used in the [project's Readme file](../
 The following examples demonstrate certain features of `switchit` but are not meant as complete usage examples as they may obviate some parts of the configuration for the sake of shortness.
 
 ### Simple command
-**Purpose:** Demonstrate the way a simple command is defined and run and that switches can be read from positional arguments as well (as long as they have the same name).
-**File:** [`simple2.js`](simple2.js)
+**Purpose:** Demonstrate the way a simple command is defined and run and that switches can be read from positional arguments as well (as long as they have the same name).  
+**File:** [`simple2.js`](simple2.js)  
 **Example output:**
 
     $ node simple2.js --name John 
@@ -27,8 +27,8 @@ The following examples demonstrate certain features of `switchit` but are not me
       Hi, Paul!
 
 ### Multiple commands
-**Purpose:** Demonstrate how a command with multiple sub-commands is defined and run.
-**File:** [`multiple.js`](multiple.js)
+**Purpose:** Demonstrate how a command with multiple sub-commands is defined and run.  
+**File:** [`multiple.js`](multiple.js)  
 **Example output:** 
 
     $ node multiple.js hi --name George  
@@ -38,24 +38,24 @@ The following examples demonstrate certain features of `switchit` but are not me
 
 
 ### Optional switches and parameters (shorthand syntax)
-**Purpose:** Demonstrate how switches and parameters can be marked as optional using the shorthand syntax.
-**File:** [`optional.js`](optional.js)
+**Purpose:** Demonstrate how switches and parameters can be marked as optional using the shorthand syntax.  
+**File:** [`optional.js`](optional.js)  
 **Example output:**
 
     $ node optional.js 
       Hi, Gunter!
 
 ### Optional switches and parameters (configuration object)
-**Purpose:** Demonstrate how switches and parameters can be marked as optional using a configuration object.
-**File:** [`optional2.js`](optional2.js)
+**Purpose:** Demonstrate how switches and parameters can be marked as optional using a configuration object.  
+**File:** [`optional2.js`](optional2.js)  
 **Example output:**
 
     $ node optional2.js 
       Hi, Gunter!
 
 ### Variadic switches and parameters
-**Purpose:** Demonstrate how switches and parameters can be configured to receive 0-n values (variadic)
-**File:** [`variadic.js`](variadic.js)
+**Purpose:** Demonstrate how switches and parameters can be configured to receive 0-n values (variadic)  
+**File:** [`variadic.js`](variadic.js)  
 **Example output**:
 
     $ node variadic.js 
@@ -75,10 +75,11 @@ The following examples demonstrate certain features of `switchit` but are not me
 The following examples intend to demonstrate how `switchit` can be used to build a full-fledged application.
 
 ### A `git` mock app built on top of switchit
-**Purpose:** Implement a mock version of `git` to demonstrate how it could be built on top of `switchit`
+**Purpose:** Implement a mock version of `git` to demonstrate how it could be built on top of `switchit`  
 **Files:**
 - [`git.js`](git.js): The entrypoint for the multi-file example
-- [`git-singlefile.js`](git-singlefile.js): The whole example as a single file (for readability)
+- [`git-singlefile.js`](git-singlefile.js): The whole example as a single file (for readability)  
+
 **Example output**:
 
     $ node git.js  
