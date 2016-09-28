@@ -1,7 +1,7 @@
 ![switchit logo](resources/switchit_logo.png)
 -
 # switchit
-A no-nonsense solution for command-line switch parsing and command dispatching.
+A no-nonsense framework for command-line switch parsing and command dispatching.
 
 `switchit` enables you to write modern command-line applications using a straightforward API and features including:
 
