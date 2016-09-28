@@ -3,6 +3,8 @@
 const Cmdlet = require('./Cmdlet');
 const Commands = require('./Commands');
 
+const Help = require('./Help');
+
 class Container extends Cmdlet {
     static defineAspect (name, value) {
         if (name === 'commands') {
@@ -33,7 +35,7 @@ class Container extends Cmdlet {
             let arg = args.pull();
 
             if (!arg) {
-                //TODO new HelpCommand().attach(me, "help").dispatch(arguments);
+                new Help().attach(me, "help").dispatch(args);
                 args.ownerPop(me);
                 resolve(0);
                 return;
@@ -43,7 +45,7 @@ class Container extends Cmdlet {
 
             if (!entry) {
                 args.ownerPop(me);
-                reject(new Error(`No such command "${arg}"`)); //TODO full cmd path
+                reject(new Error(`No such command or category "${arg}"`)); //TODO full cmd path
                 return;
             }
 

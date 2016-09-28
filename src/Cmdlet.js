@@ -86,6 +86,12 @@ class Cmdlet {
             items.addAll(value);
         }
         else {
+            if (name == 'title' && this.command === undefined) {
+                this.command = value;
+            }
+            if (name == 'command' && this.title === undefined) {
+                this.title = value;
+            }
             this[name] = value;
         }
     }
@@ -124,6 +130,7 @@ class Cmdlet {
     attach (parent, name) {
         this.parent = parent;
         this.name = name;
+        return this;
     }
     
     configure (args) {
@@ -270,6 +277,9 @@ class Cmdlet {
             if (a.isArguments || Array.isArray(a)) {
                 args = a;
             }
+        }
+        else if (!args.length) {
+            args = process.argv.slice(2);
         }
 
         a = args.isArguments ? args : new Arguments(args);

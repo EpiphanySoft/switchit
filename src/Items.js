@@ -51,6 +51,7 @@ class Items {
             item = this.itemFromValue(item);
         } else {
             item = this.itemFromString(name);
+            name = item.name;
         }
 
         item.name = name;
@@ -144,6 +145,9 @@ class Items {
             // the "in" operator):
             if (match[7] != null) {
                 item.value = match[7];
+            } else if (match[6]) { // This is an optional variadic argument, no need to explicitly define a default value
+                item.value = [];
+                item.vargs = true;
             }
         }
 
