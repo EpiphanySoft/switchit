@@ -9,6 +9,8 @@
   "scripts": {
     "test": "npm run test-unit --coverage && istanbul report",
     "test-unit": "./node_modules/.bin/istanbul test --dir coverage/unit -x **/test-**.js ./node_modules/mocha/bin/_mocha -- -R spec --recursive test/unit",
+    "test-mocha": "mocha -R spec --recursive test/unit",
+    "test-mocha-debug": "devtool ./node_modules/mocha/bin/_mocha --break -- test/unit",
     "lint": "eslint ./src/**/*.js"
   },
   "repository": {

@@ -232,4 +232,76 @@ describe('Command', function() {
         });
         new Foo().run(['abc']);
     });
+
+    it('switch with default boolean parameter', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.debug).to.equal(true);
+                done();
+            }
+        }
+        Foo.define({
+            switches: {
+                debug: {
+                    value: false
+                }
+            }
+        });
+        new Foo().run('--debug');
+    });
+
+    it('switch with default boolean parameter not supplied', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.debug).to.equal(false);
+                done();
+            }
+        }
+        Foo.define({
+            switches: {
+                debug: {
+                    value: false
+                }
+            }
+        });
+        new Foo().run([]);
+    });
+
+
+    it('switch with default boolean parameter supplied', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.debug).to.equal(true);
+                done();
+            }
+        }
+        Foo.define({
+            switches: {
+                debug: {
+                    value: false
+                }
+            }
+        });
+        new Foo().run('--debug', 'true');
+    });
+
+    it('switch does not consume the following parameter', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.debug).to.equal(true);
+                expect(parameters.foo).to.equal('foo');
+                done();
+            }
+        }
+        Foo.define({
+            parameters: 'foo',
+            switches: {
+                debug: {
+                    value: false
+                }
+            }
+        });
+        new Foo().run('--debug', 'foo');
+    });
+
 });
