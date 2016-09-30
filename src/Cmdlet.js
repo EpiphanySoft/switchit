@@ -199,7 +199,6 @@ class Cmdlet {
 
         name = this.switches.canonicalize(m[1]);
         entry = this.switches.lookup(name);
-                    debugger;
 
         if (value === undefined) {
             // --param value
