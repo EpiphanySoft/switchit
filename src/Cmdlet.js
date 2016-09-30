@@ -198,19 +198,21 @@ class Cmdlet {
         }
 
         name = this.switches.canonicalize(m[1]);
+        entry = this.switches.lookup(name);
+
         if (value === undefined) {
             // --param value
-            
-            if (typeof params[name] !== 'boolean') {
+
+            if (entry.type !== 'boolean') {
                 value = args.mustPull();
             }
             else {
                 // We allow "-foo" to toggle a boolean value if no value is provided
                 value = args.peek();
 
-                let bv = Types.boolean.convert(value);
+                let bv = Types.defs.boolean.convert(value);
                 if (bv === null) {
-                    value = !params[name];
+                    value = !(name in params ? params[name] : entry.value);
                 }
                 else {
                     // --bool true|false|...
@@ -219,8 +221,7 @@ class Cmdlet {
                 }
             }
         }
-        
-        entry = this.switches.lookup(name);
+
         let v = entry.convert(value);
 
         if (v === null) {
