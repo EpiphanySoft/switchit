@@ -5,7 +5,7 @@ const ResponseFile = require('./ResponseFile');
 const andRe = /and/i;
 const thenRe = /then/i;
 const andOrThenRe = /and|then/i;
-const expandRe = /^@([\s\.]+)$/;
+const expandRe = /^@([@\w\.\/\\\-]+)$/;
 
 /**
  * This class manages the String[] of arguments to be dispatched by Cmdlets. It tracks
@@ -20,6 +20,7 @@ class Arguments {
         this._args = args;
         this._index = 0;
         this._owners = [];
+        this._responseFileLoader = new ResponseFile();
     }
 
     get length () {
@@ -191,7 +192,7 @@ class Arguments {
     }
 
     _readResponseFile (filename) {
-        return ResponseFile.read(filename);
+        return this._responseFileLoader.read(filename);
     }
 
     _replaceResponseFileArg (index, lines) {

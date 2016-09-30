@@ -7,7 +7,7 @@ class SayHi extends Command {
 }
 
 SayHi.define({
-    switches: '[name=Gunter]'
+    switches: '[name=Ringo]'
 });
 
 new SayHi().run();

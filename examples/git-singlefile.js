@@ -75,6 +75,18 @@ AddRemote.define({
     parameters: 'url name'
 });
 
+//------------------------------------------ git/remote/ls.js
+
+class ListRemote extends Command {
+    execute () {
+        console.log('list all remotes');
+    }
+}
+
+ListRemote.define({
+    help: 'Shows a list of existing remotes'
+});
+
 //------------------------------------------ git/remote/index.js
 
 class Remote extends Container {
@@ -85,7 +97,48 @@ Remote.define({
     title: 'remote',
     help: 'Commands to manage remote references',
     commands: {
-        add: AddRemote
+        add: AddRemote,
+        default: ListRemote
+    }
+});
+
+//------------------------------------------ git/submodule/add.js
+
+class AddSubmodule extends Command {
+    execute (params) {
+        if (!params.path) {
+            params.path = 'a calculated path';
+        } else {
+            params.path = `"${params.path}"`;
+        }
+
+        console.log(`Add repository "${params.repository}" as a submodule, using ${params.path} as path.`);
+    }
+}
+
+AddSubmodule.define({
+    help: 'Add the given <repository> as a submodule at the given <path>',
+
+    parameters: [
+        'repository',
+        {
+            name: 'path',
+            value: ''
+        }
+    ]
+});
+
+//------------------------------------------ git/submodule/index.js
+
+class Submodule extends Container {
+    //
+}
+
+Submodule.define({
+    title: 'remote',
+    help: 'Initialize, update or inspect submodules',
+    commands: {
+        add: AddSubmodule
     }
 });
 
@@ -109,7 +162,8 @@ Git.define({
         pull: {
             type: Pull
         },
-        remote: Remote
+        remote: Remote,
+        submodule: Submodule
     }
 });
 

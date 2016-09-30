@@ -1,37 +1,38 @@
 {
-    "name": "switchit",
-    "version": "1.0.0",
-    "description": "Command-line Switcher and Dispatcher",
-    "homepage": "https://github.com/dongryphon/switchit#readme",
-    "author": "Don Griffin",
-    "license": "MIT",
-
-    "main": "index.js",
-
-    "scripts": {
-        "debug-demo": "node-debug example/demo.js",
-        "demo": "node example/demo.js",
-        "test": "mocha tests",
-        "lint": "eslint ./src/**/*.js"
-    },
-
-    "repository": {
-        "type": "git",
-        "url": "git+ssh://git@github.com/dongryphon/switchit.git"
-    },
-
-    "keywords": [
-        "cli"
-    ],
-
-    "bugs": {
-        "url": "https://github.com/dongryphon/switchit/issues"
-    },
-
-    "eslintConfig": ".eslintrc.json",
-    "devDependencies": {
-        "assert": "^1.4.1",
-        "eslint": "^3.5.0",
-        "mocha": "^3.0.2"
-    }
+  "name": "switchit",
+  "version": "1.0.0",
+  "description": "Command-line Switcher and Dispatcher",
+  "homepage": "https://github.com/dongryphon/switchit#readme",
+  "author": "Don Griffin",
+  "license": "MIT",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm run test-unit --coverage && istanbul report",
+    "test-unit": "./node_modules/.bin/istanbul test --dir coverage/unit -x **/test-**.js ./node_modules/mocha/bin/_mocha -- -R spec --recursive test/unit",
+    "lint": "eslint ./src/**/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/dongryphon/switchit.git"
+  },
+  "keywords": [
+    "cli"
+  ],
+  "bugs": {
+    "url": "https://github.com/dongryphon/switchit/issues"
+  },
+  "engines": {
+    "node": ">6.0.0"
+  },
+  "eslintConfig": ".eslintrc.json",
+  "devDependencies": {
+    "assert": "^1.4.1",
+    "chai": "^3.5.0",
+    "eslint": "^3.6.1",
+    "fs-extra": "^0.30.0",
+    "istanbul": "^0.4.5",
+    "mocha": "^3.1.0",
+    "randomstring": "^1.1.5",
+    "strip-ansi": "^3.0.1"
+  }
 }

@@ -7,6 +7,7 @@ const Commit = require('./commit');
 const Fetch = require('./fetch');
 const Pull = require('./pull');
 const Remote = require('./remote');
+const Submodule = require('./submodule');
 
 class Git extends Container {
     //
@@ -26,7 +27,8 @@ Git.define({
         pull: {
             type: Pull
         },
-        remote: Remote
+        remote: Remote,
+        submodule: Submodule
     }
 });
 

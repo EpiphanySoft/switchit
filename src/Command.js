@@ -40,11 +40,15 @@ class Command extends Cmdlet {
     dispatch (args) {
         var me = this;
 
-        me.configure(args);
-
-        me.validate(this.params);
-
-        return Promise.resolve(me.execute(me.params, args)).then(r => {
+        return Promise.resolve({ then: function(resolve, reject) {
+            try {
+                me.configure(args);
+                me.validate(this.params);
+                resolve(me.execute(me.params, args));
+            } catch (ex) {
+                reject(ex);
+            }
+        }}).then(r => {
             args.ownerPop(me);
             return r;
         },

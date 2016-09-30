@@ -6,7 +6,11 @@ const Path = require('path');
 const commentRe = /^\s*#(.*)$/;
 const crlfRe = /\r\n/g;
 
-module.exports = {
+class ResponseFileLoader {
+    constructor () {
+        this.resetBasePath();
+    }
+
     parse (text) {
         if (crlfRe.test(text)) {
             text = text.replace(crlfRe, '\n');
@@ -42,15 +46,29 @@ module.exports = {
         }
 
         return ret;
-    },
+    }
 
     read (filename) {
-        var fn = Path.resolve(process.cwd(), filename);
+        if (this.basePath === process.cwd()) {
+            this._basePath = Path.resolve(this.basePath, Path.dirname(filename));
+        }
+
+        var fn = Path.resolve(this.basePath, Path.basename(filename));
         
         var text = fs.readFileSync(fn, {
             encoding: 'utf8'
         });
 
-        return module.exports.parse(text);
+        return this.parse(text);
     }
-};
+
+    get basePath () {
+        return this._basePath;
+    }
+
+    resetBasePath () {
+        this._basePath = process.cwd();
+    }
+}
+
+module.exports = ResponseFileLoader;

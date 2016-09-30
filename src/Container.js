@@ -31,11 +31,21 @@ class Container extends Cmdlet {
 
         return new Promise((resolve, reject) => {
             me.configure(args);
-
+            me.validate(me.switches);
             let arg = args.pull();
 
             if (!arg) {
-                new Help().attach(me, "help").dispatch(args);
+                let defaultCmd = me.commands.lookup('default'),
+                    defaultCmdName;
+                if (defaultCmd) {
+                    defaultCmdName = defaultCmd.name;
+                    defaultCmd = defaultCmd.type;
+                }
+                else {
+                    defaultCmdName = 'help';
+                    defaultCmd = Help;
+                }
+                new defaultCmd().attach(me, defaultCmdName).dispatch(args);
                 args.ownerPop(me);
                 resolve(0);
                 return;

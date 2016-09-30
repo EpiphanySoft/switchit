@@ -2,17 +2,17 @@ const Command = require('../index.js').Command;
 
 class BrewCoffee extends Command {
     execute (params) {
-        console.log('Let\'s prepare a cup of coffee.');
-        if (params.topping.length > 0) {
-            console.log(`Add the following toppings:`);
-            params.topping.forEach(topping => console.log(`- ${topping}`));
+        console.log("Let's prepare a cup of coffee.");
+        if (params.extra.length > 0) {
+            console.log(`Add the following extras:`);
+            params.extra.forEach(extra => console.log(`- ${extra}`));
         }
     }
 }
 
 BrewCoffee.define({
-    switches: '[topping:string[]]',
-    parameters: '[topping:string[]]'
+    switches: '[extra:string[]]',
+    parameters: '[extra:string[]]'
 });
 
 new BrewCoffee().run();

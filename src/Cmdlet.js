@@ -86,12 +86,6 @@ class Cmdlet {
             items.addAll(value);
         }
         else {
-            if (name == 'title' && this.command === undefined) {
-                this.command = value;
-            }
-            if (name == 'command' && this.title === undefined) {
-                this.title = value;
-            }
             this[name] = value;
         }
     }
@@ -130,6 +124,7 @@ class Cmdlet {
     attach (parent, name) {
         this.parent = parent;
         this.name = name;
+        parent.child = this;
         return this;
     }
     
@@ -176,11 +171,12 @@ class Cmdlet {
     }
 
     /**
-     * @method dispatch
+     * @method parseSwitch
      * This method executes the commands described in the `Arguments` object. This method
      * is typically called via the `run` method.
      * @param {Arguments} args The `Arguments` instance containing the arguments to run.
-     * @return {Promise} The Promise that resolves with the command result.
+     * @param arg The current argumetn to parse the switch from
+     * @return {Array} A two element array containing the `Switch` instance ([0]) and the parsed value ([1]).
      */
 
     parseSwitch (args, arg) {
@@ -241,6 +237,7 @@ class Cmdlet {
     processSwitch (args, arg) {
         var parsed = this.parseSwitch(args, arg);
         var params = this.params;
+        var switches = this.switches;
 
         if (!parsed) {
             return false;
@@ -249,6 +246,7 @@ class Cmdlet {
         // Delegate the act of putting the value into the params map over to the
         // Switch instance.
         parsed[0].set(params, parsed[1]);
+        parsed[0].set(switches, parsed[1]);
         return true;
     }
 
@@ -267,7 +265,7 @@ class Cmdlet {
      * This method executes the commands described by the provided string arguments. This
      * method wraps the strings in an `Arguments` instance and delegates the work to the
      * `dispatch` method.
-     * @param {Arguments/String...} args The arguments to run.
+     * @param {Arguments|String...|Array} args The arguments to run.
      * @return {Promise} The Promise that resolves with the command result.
      */
     run (...args) {

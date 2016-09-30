@@ -1,0 +1,4 @@
+#Ignore this line
+@foo.txt
+then
+@bar.txt

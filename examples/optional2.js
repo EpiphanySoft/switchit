@@ -10,7 +10,7 @@ SayHi.define({
     switches: {
         name: {
             type: 'string',
-            value: 'Gunter'
+            value: 'Ringo'
         }
     }
 });

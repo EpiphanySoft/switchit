@@ -48,7 +48,12 @@ class Items {
 
     add (name, item) {
         if (item) {
-            item = this.itemFromValue(item);
+            if (typeof item === 'string' || item instanceof String) {
+                item = this.itemFromString(item);
+                name = item.name;
+            } else {
+                item = this.itemFromValue(item);
+            }
         } else {
             item = this.itemFromString(name);
             name = item.name;
@@ -105,6 +110,7 @@ class Items {
         }
 
         map[alias] = map[loname] = item;
+        item.alias.push(alias);
     }
     
     canonicalize (name) {

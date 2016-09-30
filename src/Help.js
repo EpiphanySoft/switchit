@@ -13,6 +13,7 @@ class Help extends Command {
 
         // Lines of output will be pushed here then concatenated
         let out = [];
+        let syntax = [];
 
         // If there are no arguments, could be something like: `{program}` or `{program} help|h|?` or `{program} {category...}` (e.g. 'git', 'git help', 'git remote')
         if (params.subject.length === 0) {
@@ -26,37 +27,52 @@ class Help extends Command {
 
         // Let's now make sure the supplied chain of arguments is something we know of
         let target = rootCmd.constructor;
-        params.subject.forEach(function (subject) {
+        // We're taking advantage of the resolution process to get the real name of each subject part (git r a -> git remote add)
+        params.subject = params.subject.map(function (subject) {
             target = target.commands.lookup(subject);
             if (!target) {
                 throw new Error(`No such command or category "${subject}"`);
             }
-            else {
-                target = target.type;
-            }
+
+            let name = target.name;
+            target = target.type;
+            return name;
         });
 
-        // Show the help title, the program name for the main 'help' call or the category/comamnd name for other calls
+        // Show the help title, the program name for the main 'help' call or the category/command name for other calls
         if (rootCmd.constructor == target) {
             target = rootCmd.constructor;
+            // This will display something like "Git: the stupid content tracker"
             out.push('');
             out.push(`${rootCmd.constructor.name}${rootCmd.constructor.help ? ': ' + rootCmd.constructor.help : ''}`);
         } else {
+            // This will display something like "git remote add: Adds a remote reference..."
             out.push('');
-            out.push(`${rootCmd.constructor.command} ${params.subject.join(' ')}: ${target.help ? target.help : ''}`);
+            out.push(`${rootCmd.constructor.name.toLowerCase()} ${params.subject.join(' ')}${target.help ? ': ' + target.help : ''}`);
         }
+
+        let fullName = `${rootCmd.constructor.name.toLowerCase()}${params.subject.length > 0 ? ' ' + params.subject.join(' '): ''}`;
+        // This will display something like "git", "git remote add"
+        syntax.push(fullName);
 
         if (target.switches.items.length > 0) {
             out.push('');
             out.push('Available options:');
             target.switches.items.forEach(function (option) {
-                out.push(` * --${option.name}: ${option.help}`);
+                // Example:
+                //  * --message (string)    The commit message
+                //  * --some-optional (string)  An optional variadic switch (default: [])
+                out.push(` * --${option.name} (${option.type})${option.help ? ':\t' + option.help + '\t' : ''}${option.value !== undefined ? ' (default: ' + (option.vargs ? '[]' : option.value) + ')' : ''}`);
             });
+            // Since we have options, push their placeholder into the syntax string
+            syntax.push('[options]');
         }
 
         if (target.isContainer && target.commands.items.length > 0) {
             let containers = [];
             let commands = [];
+            let syntaxTokenParts = [];
+            let defaultCmd;
             target.commands.items.forEach(function (cmdlet) {
                 if (cmdlet.type.isContainer) {
                     containers.push(cmdlet);
@@ -68,26 +84,55 @@ class Help extends Command {
 
             if (containers.length > 0) {
                 out.push('');
-                out.push('Available categories:');
+                out.push('Available command containers:');
                 containers.forEach(function (container) {
-                    out.push(` - ${container.name}${container.type.help ? ': ' + container.type.help : ''}`);
+                    // Example:
+                    //  * remote:        Commands to manage remote...
+                    out.push(` * ${container.name}${container.type.help ? ':\t' + container.type.help + '\t' : ''}${container.alias.length > 0 ? '(alias: ' + container.alias.join(', ') + ')': ''}`);
                 });
+                syntaxTokenParts.push('container');
             }
 
             if (commands.length > 0) {
                 out.push('');
-                out.push('Available commands:');
+                out.push('Available sub-commands:');
                 commands.forEach(function (command) {
-                    out.push(` - ${command.name}${command.type.help ? ': ' + command.type.help : ''}`);
+                    if (command.name === "default") {
+                        defaultCmd = command;
+                        if (defaultCmd.type.help) {
+                            syntax.unshift(`${fullName}\t${defaultCmd.type.help}\n  `);
+                        }
+                    }
+                    else {
+                        // Example:
+                        //  * help:       This command ...
+                        out.push(` * ${command.name}${command.type.help ? ':\t' + command.type.help + '\t' : ''}${command.alias.length > 0 ? '(alias: ' + command.alias.join(', ') + ')': ''}`);
+                    }
                 });
+                syntaxTokenParts.push('subcommand');
             }
+
+            // This container has additional containers and/or commands, push the placeholder into the syntax string
+            syntax.push(`${defaultCmd ? '(' : '[' }${syntaxTokenParts.join('|')}${defaultCmd ? ')\tExecute subcommand' : ']' }`);
         }
 
+        if (target.isCommand && target.parameters && target.parameters.items.length > 0) {
+            // This command accepts named positional arguments, push them into the syntax string
+            target.parameters.items.forEach(function (parameter) {
+                // requiredArg [optionalArg] variadicRequiredArg... [variadicOptionalArg...]
+                syntax.push(`${parameter.optional ? '[' : ''}${parameter.name}${parameter.vargs ? '...' : ''}${parameter.optional ? ']' : ''}`);
+            });
+        }
+
+        // Construct the syntax string and add it to the output
+        out.push('');
+        out.push(`Syntax:`);
+        out.push(`  ${syntax.join(' ')}`);
         this.printOutput(out, 1);
     }
 
-    printOutput (strArr, leftPad = 0) {
-        strArr = strArr.map(ln => `${' '.repeat(leftPad)}${ln}`);
+    printOutput (strArr, indent = 0) {
+        strArr = strArr.map(ln => `${' '.repeat(indent)}${ln}`);
         // TODO: markdown support
         console.log(strArr.join('\n'));
     }

@@ -40,6 +40,8 @@ class Value {
                 this.type = 'string';
             }
         }
+
+        this.alias = [];
         
         this.verify();
     }
