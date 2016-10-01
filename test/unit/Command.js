@@ -227,7 +227,7 @@ describe('Command', function() {
     it('should accumulate vargs switches', function (done) {
         class Foo extends Command {
             execute (parameters) {
-                expect(parameters.bar).to.equal([1,2]);
+                expect(parameters.bar).to.eql([1,2]);
                 expect(parameters.baz).to.equal('abc');
                 console.log('foo');
             }
@@ -248,7 +248,7 @@ describe('Command', function() {
     it('should accumulate vargs parameters', function (done) {
         class Foo extends Command {
             execute (parameters) {
-                expect(parameters.bar).to.equal([1,2]);
+                expect(parameters.bar).to.eql([1,2]);
                 expect(parameters.baz).to.equal('abc');
                 console.log('foo');
             }

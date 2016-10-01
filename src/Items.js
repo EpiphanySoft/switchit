@@ -45,12 +45,6 @@ class Items {
         
         if (item) {
             item = ItemType.parse(item);
-            // if (typeof item === 'string' || item instanceof String) {
-            //     item = ItemType.parse(item);
-            //     name = item.name;
-            // } else {
-            //     item = ItemType.parse(item);
-            // }
         } else {
             item = ItemType.parse(name);
             name = item.name;
@@ -75,7 +69,11 @@ class Items {
         }
         else if (Array.isArray(all)) {
             for (let item of all) {
-                this.add(item.name, item);
+                if (typeof item === 'string') {
+                    this.add(item);
+                } else {
+                    this.add(item.name, item);
+                }
             }
         }
         else {

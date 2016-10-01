@@ -55,7 +55,7 @@ describe('Cmdlet', function() {
         class Foo extends Cmdlet {
             //
         }
-        debugger;
+
         Foo.define({
             switches: '[bar=baz]'
         });
@@ -68,6 +68,7 @@ describe('Cmdlet', function() {
 
     it('should accept switches as an array of mixed objects', function (done) {
         class Foo extends Cmdlet {}
+
         Foo.define({
             switches: [
                 '[bar=baz]',
@@ -77,6 +78,7 @@ describe('Cmdlet', function() {
                 }
             ]
         });
+
         let barSwitch = Foo.switches.lookup('bar');
         expect(barSwitch).not.to.equal(null);
         expect(barSwitch.value).to.equal('baz');
