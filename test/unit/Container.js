@@ -1,5 +1,6 @@
 'use strict';
-const expect = require('chai').expect;
+
+const expect = require('expect.js');
 const path = require('path');
 const fs = require('fs');
 
@@ -21,15 +22,15 @@ describe('Container', function() {
 
     it('should describe itself as a Container at the class and instance level', function (done) {
         class Foo extends Container {}
-        expect(Foo.isContainer).to.be.true;
-        expect(new Foo().isContainer).to.be.true;
+        expect(Foo.isContainer).to.be.ok();
+        expect(new Foo().isContainer).to.be.ok();
         done();
     });
 
     it('should describe itself as a Cmdlet at the class and instance level', function (done) {
         class Foo extends Container {}
-        expect(Foo.isCmdlet).to.be.true;
-        expect(new Foo().isCmdlet).to.be.true;
+        expect(Foo.isCmdlet).to.be.ok();
+        expect(new Foo().isCmdlet).to.be.ok();
         done();
     });
 
@@ -41,15 +42,15 @@ describe('Container', function() {
 
     it('should initialize the switches property automatically', function (done) {
         class Foo extends Container {}
-        expect(new Foo().switches).to.not.be.null;
-        expect(new Foo().switches).to.be.an.instanceof(Switches);
+        expect(new Foo().switches).not.to.equal(null);
+        expect(new Foo().switches).to.be.a(Switches);
         done();
     });
 
     it('should initialize the commands property automatically', function (done) {
         class Foo extends Container {}
-        expect(new Foo().commands).to.not.be.null;
-        expect(new Foo().commands).to.be.an.instanceof(Commands);
+        expect(new Foo().commands).not.to.equal(null);
+        expect(new Foo().commands).to.be.a(Commands);
         done();
     });
 
@@ -64,7 +65,7 @@ describe('Container', function() {
             }
         });
         let barCmd = Foo.commands.lookup('bar');
-        expect(barCmd).to.not.be.null;
+        expect(barCmd).not.to.equal(null);
         expect(barCmd.type).to.equal(Bar);
         done();
     });
@@ -78,7 +79,7 @@ describe('Container', function() {
             }
         });
         let barCmd = Foo.commands.lookup('bar');
-        expect(barCmd).to.not.be.null;
+        expect(barCmd).not.to.equal(null);
         expect(barCmd.type).to.equal(Bar);
         done();
     });
@@ -90,7 +91,7 @@ describe('Container', function() {
             commands: [Bar]
         });
         let barCmd = Foo.commands.lookup('bar');
-        expect(barCmd).to.not.be.null;
+        expect(barCmd).not.to.equal(null);
         expect(barCmd.type).to.equal(Bar);
         done();
     });
@@ -131,7 +132,7 @@ describe('Container', function() {
         Foo.define({
             bar: true
         });
-        expect(Foo.bar).to.be.true;
+        expect(Foo.bar).to.be.ok();
         done();
     });
 
@@ -301,9 +302,10 @@ describe('Container', function() {
         class Baz extends Command {
             execute() {
                 let root = this.root();
-                expect(root).to.be.an.instanceof(Foo);
-                expect(root.down()).to.be.an.instanceof(Bar);
-                expect(root.leaf()).to.be.an.instanceof(Baz);
+                expect(root).to.be.a(Foo);
+                expect(root.down()).to.be.a(Bar);
+                expect(root.down().up()).to.be.a(Foo);
+                expect(root.leaf()).to.be.a(Baz);
                 expect(root.leaf()).to.equal(this);
                 done();
             }
