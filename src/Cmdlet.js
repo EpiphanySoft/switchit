@@ -210,9 +210,9 @@ class Cmdlet {
                 // We allow "-foo" to toggle a boolean value if no value is provided
                 value = args.peek();
 
-                let bv = Types.defs.boolean.convert(value);
+                let bv = Types.boolean.convert(value);
                 if (bv === null) {
-                    value = !(name in params ? params[name] : entry.value);
+                    value = !((name in params) ? params[name] : entry.value);
                 }
                 else {
                     // --bool true|false|...

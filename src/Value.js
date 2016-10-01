@@ -1,6 +1,7 @@
 "use strict";
 
 const EMPTY = [];
+const Item = require('./Item');
 const Types = require('./Types');
 
 /**
@@ -9,10 +10,8 @@ const Types = require('./Types');
  * providing a `type` config property. If no `type` is specified, the `value` (if given)
  * is used. If neither `type` nor `value` are given, the type defaults to String.
  */
-class Value {
-    constructor (config) {
-        Object.assign(this, config);
-
+class Value extends Item {
+    init () {
         // Allow the user to provide "optional:true|false" or "required:true|false"
         // and calculate the other from it:
         if (this.optional !== undefined) {
@@ -40,10 +39,6 @@ class Value {
                 this.type = 'string';
             }
         }
-
-        this.alias = [];
-        
-        this.verify();
     }
 
     /**

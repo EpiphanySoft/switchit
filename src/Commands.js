@@ -1,9 +1,9 @@
 "use strict";
 
+const Item = require('./Item');
 const Items = require('./Items');
-const Value = require('./Value');
 
-class Cmd extends Value {
+class Cmd extends Item {
     create (parent) {
         var cmd = new this.type();
 
