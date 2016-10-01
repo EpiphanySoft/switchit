@@ -327,16 +327,15 @@ describe('Container', function() {
     });
 
     describe('Help', function () {
-        it('should display main help message if no arguments are passed',
-            function (done) {
-                class Foo extends Container {
-                }
+        it('should display main help message if no arguments are passed', function (done) {
+            class Foo extends Container {
+            }
 
-                Util.resolves(done, Util.capturesStdout(() => {
-                    new Foo().run([]);
-                }).then(out => {
-                    expect(out).to.equal(' \n Foo\n \n Syntax:\n   foo\n');
-                }));
-            });
+            Util.resolves(done, Util.capturesStdout(() => {
+                new Foo().run([]);
+            }).then(out => {
+                expect(out).to.equal(' \n Foo\n \n Syntax:\n   foo\n');
+            }));
+        });
     });
 });

@@ -6,9 +6,9 @@ const Types = require('./Types');
 
 const NAME = '[a-z_]\\w*';
 const itemRe = new RegExp('^\\s*(?:' +
-                '(' + NAME + ')' +   // [1]
-                '(?:[:](' + NAME + '))?' +  // optional ":type" [2]
-                '((?:\\.\\.\\.)|(?:\\[\\]))?'  +   // optional "..." or "[]" [3]
+                '(\w#)?(' + NAME + ')' +   // optional ("switch#" [1]) "name" [2]
+                '(?:[:](' + NAME + '))?' +  // optional ":type" [3]
+                '((?:\\.\\.\\.)|(?:\\[\\]))?'  +   // optional "..." or "[]" [4]
             ')\\s*$', 'i');
 
 /**
@@ -20,12 +20,16 @@ const itemRe = new RegExp('^\\s*(?:' +
 class Value extends Item {
     /**
      * This method accepts a string and produces an item config object.
-     * @param {String} def
+     * @param {String/Object} def
+     * @param {"parameter"/"switch"} kind
      * @return {Object}
      */
-    static parse (def) {
+    static parse (def, kind) {
         if (typeof def !== 'string') {
-            if (!def || def.constructor !== Object) {
+            // If we have an Item already or if def is a simple Object, we leave it as
+            // is and return it. Otherwise, assume it is the value property and wrap it
+            // in an object.
+            if (!(def && (def.isItem || def.constructor === Object))) {
                 def = {
                     value: def
                 };
@@ -34,10 +38,19 @@ class Value extends Item {
             return def;
         }
 
+        // String syntax: "[ { c # name :type ... [] } ]"
+        //
+        // The "[]" wrapping indicates optionality.
+        // The "{}" wrapping indicates a parameter that is also a switch.
+        // The "c#" prefix configures the single char name (case-sensitive).
+        // The "name" is the canonical name.
+        // The ":type" suffix indicates the data type (string is default).
+        // Either "..." or "[]" indicates multiple values are allowed.
+
         var valid = true,
             optional = false,
             switchy = false,
-            i, value;
+            i, item, value;
 
         // Peel off "[]" from "[foo]" to leave "foo" (remember it as optional).
         if (def[0] === '[') {
@@ -55,7 +68,7 @@ class Value extends Item {
             if (valid) {
                 def = def.substr(1, def.length - 2);
                 // Only parameters use "{foo}" syntax
-                valid = this.itemType.isParameter;
+                valid = kind === 'parameter';
                 switchy = true;
             }
         }
@@ -72,17 +85,21 @@ class Value extends Item {
         // Regex the rest... roughly: name(:type)?(...|[])?
         let match = itemRe.exec(def);
 
-        if (!match || !valid) {
-            throw new Error(`Invalid ${this.constructor.kind} syntax definition: "${def}"`);
+        if (match) {
+            //  "r#recurse:string[]"  // [ ., 'r', 'recurse', 'string', '[]' ]
+            item = {
+                name: match[2],
+                char: match[1] || null,
+                type: match[3] || null,
+                optional: optional,  // may not have a default value...
+                switch: switchy,
+                vargs: !!match[4]
+            };
         }
 
-        let item = {
-            name: match[1],
-            type: match[2] || null,
-            optional: optional,  // may not have a default value...
-            switch: switchy,
-            vargs: !!match[3]
-        };
+        if (!valid) {
+            throw new Error(`Invalid ${kind} definition syntax: "${def}"`);
+        }
 
         if (value !== undefined) {
             // Only set a value if we have one (presence is detected via "in" operator):

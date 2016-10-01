@@ -75,8 +75,16 @@ const plusParamRe = /\+([a-z_-][\w-]*)/i;
  */
 class Cmdlet {
     static define (members) {
+        // Process switches first so that parameters can link up with existing
+        // switches
+        if (members.switches) {
+            this.defineAspect('switches', members.switches);
+        }
+
         for (let name in members) {
-            this.defineAspect(name, members[name]);
+            if (name !== 'switches') {
+                this.defineAspect(name, members[name]);
+            }
         }
     }
 
@@ -238,7 +246,6 @@ class Cmdlet {
     processSwitch (args, arg) {
         var parsed = this.parseSwitch(args, arg);
         var params = this.params;
-        var switches = this.switches;
 
         if (!parsed) {
             return false;
@@ -247,7 +254,7 @@ class Cmdlet {
         // Delegate the act of putting the value into the params map over to the
         // Switch instance.
         parsed[0].set(params, parsed[1]);
-        parsed[0].set(switches, parsed[1]);
+
         return true;
     }
 

@@ -27,14 +27,18 @@ class Cmd extends Item {
         throw new Error(`Missing command definition for ${def}`);
     }
 
+    constructor (config) {
+        super(config);
+
+        this.aliases = [];
+    }
+
     create (parent) {
         var cmd = new this.type();
 
         if (parent) {
             cmd.attach(parent, this.name);
         }
-
-        this.aliases = [];
 
         return cmd;
     }
@@ -46,8 +50,6 @@ class Cmd extends Item {
     }
 }
 
-Cmd.kind = 'command';
-Cmd.kinds = 'commands';
 Cmd.isCmd = Cmd.prototype.isCmd = true;
 
 /**
@@ -65,10 +67,12 @@ class Commands extends Items {
         }
 
         map[alias] = map[loname] = item;
-        item.alias.push(alias);
+        item.aliases.push(alias);
     }
 }
 
+Commands.kind = 'command';
+Commands.kinds = 'commands';
 Commands.itemType = Commands.prototype.itemType = Cmd;
 Commands.isCommands = Commands.prototype.isCommands = true;
 

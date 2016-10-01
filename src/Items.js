@@ -27,42 +27,59 @@ class Items {
 
     constructor (owner, base) {
         this.owner = owner;
-        this.base = base || null;
-        this.items = base ? base.items.slice() : [];
-        this.map = base ? Object.create(base.map) : {};
+
+        if (base) {
+            this.base = base;
+            this.items = base.items.slice();
+            this.map = Object.create(base.map);
+        } else {
+            this.base = null;
+            this.items = [];
+            this.map = {};
+        }
     }
 
-    static get kind () {
-        return this.itemType.kind;
+    * [Symbol.iterator] () {
+        var map = this.map;
+
+        for (var key in map) {
+            let item = map[key];
+
+            // Filter out all aliases of an item
+            if (item.name === key) {
+                yield item;
+            }
+        }
     }
 
-    static get kinds () {
-        return this.itemType.kinds;
-    }
-    
     add (name, item) {
-        var ItemType = this.itemType;
+        var ItemType = this.itemType,
+            kind = this.constructor.kind;
         
         if (item) {
-            item = ItemType.parse(item);
+            item = ItemType.parse(item, kind);
         } else {
-            item = ItemType.parse(name);
+            item = ItemType.parse(name, kind);
             name = item.name;
         }
 
         item.name = name;
         item.loname = name.toLowerCase();
 
-        if (!item.isValue) {
-            item = this.wrap(item);
+        if (!item.isItem) {
+            item = new ItemType(item);
         }
+
+        this.canAdd(item);
 
         this.items.push(item);
         this.map[name] = this.map[item.loname] = item;
+
+        return item;
     }
 
     addAll (all) {
-        if (typeof all === 'string' || all instanceof String) {  // TODO instanceof?
+        if (typeof all === 'string') {
             all = all.split(' ');
 
             all.forEach(part => this.add(part));
@@ -109,6 +126,20 @@ class Items {
         }
 
         return entry.name;
+    }
+
+    canAdd (item) {
+        let name = item.name;
+
+        if (this.map[name] || this.map[item.loname]) {
+            throw new Error(`Duplicate ${this.kind} "${name}"`);
+        }
+    }
+    
+    get (name) {
+        var map = this.map;
+
+        return map[name] || map[name.toLowerCase()];
     }
 
     lookup (name) {
@@ -198,16 +229,6 @@ class Items {
         }
         
         return null;
-    }
-
-    /**
-     * Wraps the given config object as a `Value` or derived type.
-     * @param {Object} item The config object for the derived `Value` type.
-     * @return {Item}
-     */
-    wrap (item) {
-        var T = this.itemType;
-        return new T(item);
     }
 }
 

@@ -6,8 +6,22 @@ const Parameters = require('./Parameters');
 class Command extends Cmdlet {
     static defineAspect (name, value) {
         if (name === 'parameters') {
-            var items = this.parameters;
-            items.addAll(value);
+            var parameters = this.parameters;
+
+            parameters.addAll(value);
+
+            let switches = this.switches;
+            for (let param of parameters) {
+                if (param.switch) {
+                    let name = param.name;
+
+                    if (switches.get(name)) {
+                        throw new Error(`Parameter ${name} already defined as a switch`);
+                    }
+
+                    switches.add(param);
+                }
+            }
         }
         else {
             super.defineAspect(name, value);

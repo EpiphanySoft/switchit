@@ -12,6 +12,8 @@ class Item {
     constructor (config) {
         Object.assign(this, config);
         
+        this._config = config;
+
         if (this.init) {
             this.init();
         }
