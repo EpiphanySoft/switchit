@@ -1,5 +1,5 @@
 'use strict';
-const expect = require('chai').expect;
+const expect = require('expect.js');
 const path = require('path');
 
 const TestUtils = require('../util');
@@ -26,18 +26,18 @@ describe('Arguments', function() {
             expect.fail();
         } catch (ignore) {}
 
-        expect(args.pullConjunction(true)).to.be.false;
+        expect(args.pullConjunction(true)).to.not.be.ok();
         args.advance(7);
-        expect(args.pullConjunction()).to.be.false;
+        expect(args.pullConjunction()).to.not.be.ok();
         args.advance();
-        expect(args.pullConjunction()).to.be.false;
+        expect(args.pullConjunction()).to.not.be.ok();
         args.advance();
-        expect(args.pullConjunction(true)).to.be.true;
+        expect(args.pullConjunction(true)).to.be.ok();
         expect(args.pull()).to.equal(rawArgs[13]);
-        expect(args.more()).to.be.true;
+        expect(args.more()).to.be.ok();
         expect(args.mustPull()).to.equal(rawArgs[14]);
         args.advance();
-        expect(args.atEnd()).to.be.true;
+        expect(args.atEnd()).to.be.ok();
 
         try {
             args.mustPull();

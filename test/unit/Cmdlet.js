@@ -1,5 +1,5 @@
 'use strict';
-const expect = require('chai').expect;
+const expect = require('expect.js');
 const path = require('path');
 
 const Cmdlet = require('../../src/Cmdlet');
@@ -9,8 +9,8 @@ const Arguments = require('../../src/Arguments');
 describe('Cmdlet', function() {
     it('should describe itself as a Cmdlet at the class and instance level', function (done) {
         class Foo extends Cmdlet {}
-        expect(Foo.isCmdlet).to.be.true;
-        expect(new Foo().isCmdlet).to.be.true;
+        expect(Foo.isCmdlet).to.be.ok();
+        expect(new Foo().isCmdlet).to.be.ok();
         done();
     });
 
@@ -22,8 +22,8 @@ describe('Cmdlet', function() {
 
     it('should initialize the switches property automatically', function (done) {
         class Foo extends Cmdlet {}
-        expect(new Foo().switches).to.not.be.null;
-        expect(new Foo().switches).to.be.an.instanceof(Switches);
+        expect(new Foo().switches).not.to.equal(null);
+        expect(new Foo().switches).to.be.a(Switches);
         done();
     });
 
@@ -32,7 +32,7 @@ describe('Cmdlet', function() {
         Foo.define({
             bar: true
         });
-        expect(Foo.bar).to.be.true;
+        expect(Foo.bar).to.be.ok();
         done();
     });
 
@@ -46,7 +46,7 @@ describe('Cmdlet', function() {
             }
         });
         let barSwitch = Foo.switches.lookup('bar');
-        expect(barSwitch).to.not.be.null;
+        expect(barSwitch).not.to.equal(null);
         expect(barSwitch.value).to.equal('baz');
         done();
     });
@@ -57,7 +57,7 @@ describe('Cmdlet', function() {
             switches: '[bar=baz]'
         });
         let barSwitch = Foo.switches.lookup('bar');
-        expect(barSwitch).to.not.be.null;
+        expect(barSwitch).not.to.equal(null);
         expect(barSwitch.value).to.equal('baz');
         done();
     });
@@ -74,11 +74,11 @@ describe('Cmdlet', function() {
             ]
         });
         let barSwitch = Foo.switches.lookup('bar');
-        expect(barSwitch).to.not.be.null;
+        expect(barSwitch).not.to.equal(null);
         expect(barSwitch.value).to.equal('baz');
 
         let abcSwitch = Foo.switches.lookup('abc');
-        expect(abcSwitch).to.not.be.null;
+        expect(abcSwitch).not.to.equal(null);
         expect(abcSwitch.value).to.equal('xyz');
         done();
     });

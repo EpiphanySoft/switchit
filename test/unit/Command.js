@@ -1,5 +1,6 @@
 'use strict';
-const expect = require('chai').expect;
+
+const expect = require('expect.js');
 const path = require('path');
 
 const Command = require('../../src/Command');
@@ -10,15 +11,15 @@ const Arguments = require('../../src/Arguments');
 describe('Command', function() {
     it('should describe itself as a Command at the class and instance level', function (done) {
         class Foo extends Command {}
-        expect(Foo.isCommand).to.be.true;
-        expect(new Foo().isCommand).to.be.true;
+        expect(Foo.isCommand).to.be.ok();
+        expect(new Foo().isCommand).to.be.ok();
         done();
     });
 
     it('should describe itself as a Cmdlet at the class and instance level', function (done) {
         class Foo extends Command {}
-        expect(Foo.isCmdlet).to.be.true;
-        expect(new Foo().isCmdlet).to.be.true;
+        expect(Foo.isCmdlet).to.be.ok();
+        expect(new Foo().isCmdlet).to.be.ok();
         done();
     });
 
@@ -30,15 +31,15 @@ describe('Command', function() {
 
     it('should initialize the switches property automatically', function (done) {
         class Foo extends Command {}
-        expect(new Foo().switches).to.not.be.null;
-        expect(new Foo().switches).to.be.an.instanceof(Switches);
+        expect(new Foo().switches).not.to.equal(null);
+        expect(new Foo().switches).to.be.a(Switches);
         done();
     });
 
     it('should initialize the parameters property automatically', function (done) {
         class Foo extends Command {}
-        expect(new Foo().parameters).to.not.be.null;
-        expect(new Foo().parameters).to.be.an.instanceof(Parameters);
+        expect(new Foo().parameters).not.to.equal(null);
+        expect(new Foo().parameters).to.be.a(Parameters);
         done();
     });
 
@@ -52,7 +53,7 @@ describe('Command', function() {
             }
         });
         let barParam = Foo.parameters.lookup('bar');
-        expect(barParam).to.not.be.null;
+        expect(barParam).not.to.equal(null);
         expect(barParam.value).to.equal('baz');
         done();
     });
@@ -63,7 +64,7 @@ describe('Command', function() {
             parameters: '[bar=baz]'
         });
         let barParam = Foo.parameters.lookup('bar');
-        expect(barParam).to.not.be.null;
+        expect(barParam).not.to.equal(null);
         expect(barParam.value).to.equal('baz');
         done();
     });
@@ -80,11 +81,11 @@ describe('Command', function() {
             ]
         });
         let barParam = Foo.parameters.lookup('bar');
-        expect(barParam).to.not.be.null;
+        expect(barParam).not.to.equal(null);
         expect(barParam.value).to.equal('baz');
 
         let abcParam = Foo.parameters.lookup('abc');
-        expect(abcParam).to.not.be.null;
+        expect(abcParam).not.to.equal(null);
         expect(abcParam.value).to.equal('xyz');
         done();
     });
@@ -94,7 +95,7 @@ describe('Command', function() {
         Foo.define({
             bar: true
         });
-        expect(Foo.bar).to.be.true;
+        expect(Foo.bar).to.be.ok();
         done();
     });
 
@@ -144,8 +145,8 @@ describe('Command', function() {
         class Foo extends Command {
             execute () {
                 expect(arguments.length).to.equal(2);
-                expect(arguments[0]).to.be.an.instanceof(Object);
-                expect(arguments[1]).to.be.an.instanceof(Arguments);
+                expect(arguments[0]).to.be.a(Object);
+                expect(arguments[1]).to.be.a(Arguments);
                 done();
             }
         }

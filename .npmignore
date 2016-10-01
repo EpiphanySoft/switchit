@@ -5,3 +5,6 @@ test-files
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 examples
+.travis.yml
+.eslintrc.json
+.codeclimate.yml
