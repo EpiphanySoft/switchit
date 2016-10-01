@@ -31,7 +31,7 @@ class Container extends Cmdlet {
 
         return new Promise((resolve, reject) => {
             me.configure(args);
-            me.validate(me.switches);
+            me.validate(me.params);
             let arg = args.pull();
 
             if (!arg) {

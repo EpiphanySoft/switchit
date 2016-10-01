@@ -3,25 +3,17 @@
 const Items = require('./Items');
 const Value = require('./Value');
 
-class Parameter extends Value {
-}
-
 /**
  * This class manages a case-insensitive collection of named positional parameters.
  * @private
  */
 class Parameters extends Items {
-    static get (owner) {
-        return super.get(owner, 'parameters');
-    }
-
-    constructor (owner, base) {
-        super(owner, base, 'parameters');
-    }
-
-    wrap (item) {
-        return new Parameter(item);
-    }
+    // empty
 }
+
+Parameters.kind = 'parameter';
+Parameters.kinds = 'parameters';
+Parameters.itemType = Parameters.prototype.itemType = Value;
+Parameters.isParameters = Parameters.prototype.isParameters = true;
 
 module.exports = Parameters;

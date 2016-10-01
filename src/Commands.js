@@ -1,9 +1,38 @@
 "use strict";
 
+const Item = require('./Item');
 const Items = require('./Items');
-const Value = require('./Value');
 
-class Cmd extends Value {
+class Cmd extends Item {
+    static parse (def) {
+        if (typeof def !== 'string') {
+            if (def.isCmdlet) {
+                def = {
+                    type: def
+                };
+            }
+
+            return def;
+        }
+        
+        // This method would be called if user calls add('foo') or more likely if they
+        // call:
+        //
+        //      C.define({
+        //          commands: 'foo bar'
+        //      });
+        //
+        // Neither is valid for a command container.
+        //
+        throw new Error(`Missing command definition for ${def}`);
+    }
+
+    constructor (config) {
+        super(config);
+
+        this.aliases = [];
+    }
+
     create (parent) {
         var cmd = new this.type();
 
@@ -21,45 +50,30 @@ class Cmd extends Value {
     }
 }
 
+Cmd.isCmd = Cmd.prototype.isCmd = true;
+
 /**
  * This class manages a case-insensitive collection of named commands.
  * @private
  */
 class Commands extends Items {
-    static get (owner) {
-        return super.get(owner, 'commands');
-    }
-
-    constructor (owner, base) {
-        super(owner, base, 'commands');
-    }
-
-    itemFromString (def) {
-        // This method would be called if user calls add('foo') or more likely if they
-        // call:
-        //
-        //      C.define({
-        //          commands: 'foo bar'
-        //      });
-        //
-        // Neither is valid for a command container.
-        //
-        throw new Error(`Missing command definition for ${def}`);
-    }
-
-    itemFromValue (item) {
-        if (item.isCmdlet) {
-            item = {
-                type: item
-            };
+    alias (alias, actualName) {
+        var map = this.map,
+            item = map[actualName],
+            loname = alias.toLowerCase();
+        
+        if (!item) {
+            throw new Error(`No such command "${actualName}" for alias "${alias}"`);
         }
 
-        return item;
-    }
-
-    wrap (item) {
-        return new Cmd(item);
+        map[alias] = map[loname] = item;
+        item.aliases.push(alias);
     }
 }
+
+Commands.kind = 'command';
+Commands.kinds = 'commands';
+Commands.itemType = Commands.prototype.itemType = Cmd;
+Commands.isCommands = Commands.prototype.isCommands = true;
 
 module.exports = Commands;

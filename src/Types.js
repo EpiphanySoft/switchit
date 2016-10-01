@@ -129,7 +129,10 @@ const Types = {
      * @param {Type} def The `Type` instance of a config object for one.
      */
     define (def) {
-        if (Types.defs[def.name]) {
+        // Types are stored on the defs object (for easy iteration) and directly on
+        // the Types singleton (for easy use), so check Types to prevent smashing one
+        // of its methods.
+        if (Types[def.name]) {
             throw new Error(`Type already defined: "${def.name}"`);
         }
 
@@ -137,7 +140,7 @@ const Types = {
             def = new Type(def);
         }
 
-        Types.defs[def.name] = def;
+        Types.defs[def.name] = Types[def.name] = def;
     },
 
     get (name) {

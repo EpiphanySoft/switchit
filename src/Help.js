@@ -85,10 +85,10 @@ class Help extends Command {
             if (containers.length > 0) {
                 out.push('');
                 out.push('Available command containers:');
-                containers.forEach(function (container) {
+                containers.forEach(function (ct) {
                     // Example:
                     //  * remote:        Commands to manage remote...
-                    out.push(` * ${container.name}${container.type.help ? ':\t' + container.type.help + '\t' : ''}${container.alias.length > 0 ? '(alias: ' + container.alias.join(', ') + ')': ''}`);
+                    out.push(` * ${ct.name}${ct.type.help ? ':\t' + ct.type.help + '\t' : ''}${ct.aliases.length > 0 ? ' (or ' + ct.aliases.join(', ') + ')': ''}`);
                 });
                 syntaxTokenParts.push('container');
             }
@@ -106,7 +106,7 @@ class Help extends Command {
                     else {
                         // Example:
                         //  * help:       This command ...
-                        out.push(` * ${command.name}${command.type.help ? ':\t' + command.type.help + '\t' : ''}${command.alias.length > 0 ? '(alias: ' + command.alias.join(', ') + ')': ''}`);
+                        out.push(` * ${command.name}${command.type.help ? ':\t' + command.type.help + '\t' : ''}${command.aliases.length > 0 ? ' (or ' + command.aliases.join(', ') + ')': ''}`);
                     }
                 });
                 syntaxTokenParts.push('subcommand');

@@ -2,20 +2,6 @@
 
 const Value = require('./Value');
 
-const NAME = '[a-z_]\\w*';
-const VARARG = '((?:\\.\\.\\.)|(?:\\[\\]))?';  // match "type..." or "type[]"
-const itemRe = new RegExp('^\\s*(?:' +
-            '(?:' +
-                '(' + NAME + ')' +   // [1]
-                '(?:[:](' + NAME + ')'+VARARG+')?' +  // [2] optional ":type..." [3]
-            ')|' +
-            '(?:\\[' +
-                '(' + NAME + ')' +   // [4]
-                '(?:[:](' + NAME + ')'+VARARG+')?' +  // [5] optional ":type..." [6]
-                '(?:[=]([^\\]]*))?' +       // [7] optional "=value"
-            '\\])' +
-        ')\\s*$', 'i');
-
 // Playground for above: https://jsfiddle.net/yo6m18xr/
 
 /**
@@ -25,60 +11,86 @@ const itemRe = new RegExp('^\\s*(?:' +
  * @private
  */
 class Items {
-    static get (owner, name) {
+    static get (owner) {
+        var name = this.kinds;
         var key = '_' + name;
         var ret = owner[key];
 
         if (!owner.hasOwnProperty(key)) {
             let base = this.get(Object.getPrototypeOf(owner), name);
 
-            owner[key] = ret = new this(owner, base, name);
+            owner[key] = ret = new this(owner, base);
         }
 
         return ret;
     }
 
-    constructor (owner, base, kind) {
+    constructor (owner, base) {
         this.owner = owner;
-        this.base = base || null;
-        this.items = base ? base.items.slice() : [];
-        this.kind = base ? base.kind : kind;
-        this.map = base ? Object.create(base.map) : {};
+
+        if (base) {
+            this.base = base;
+            this.items = base.items.slice();
+            this.map = Object.create(base.map);
+        } else {
+            this.base = null;
+            this.items = [];
+            this.map = {};
+        }
+    }
+
+    * [Symbol.iterator] () {
+        var map = this.map;
+
+        for (var key in map) {
+            let item = map[key];
+
+            // Filter out all aliases of an item
+            if (item.name === key) {
+                yield item;
+            }
+        }
     }
 
     add (name, item) {
+        var ItemType = this.itemType,
+            kind = this.constructor.kind;
+        
         if (item) {
-            if (typeof item === 'string' || item instanceof String) {
-                item = this.itemFromString(item);
-                name = item.name;
-            } else {
-                item = this.itemFromValue(item);
-            }
+            item = ItemType.parse(item, kind);
         } else {
-            item = this.itemFromString(name);
+            item = ItemType.parse(name, kind);
             name = item.name;
         }
 
         item.name = name;
         item.loname = name.toLowerCase();
 
-        if (!item.isValue) {
-            item = this.wrap(item);
+        if (!item.isItem) {
+            item = new ItemType(item);
         }
+
+        this.canAdd(item);
 
         this.items.push(item);
         this.map[name] = this.map[item.loname] = item;
+
+        return item;
     }
 
     addAll (all) {
-        if (typeof all === 'string' || all instanceof String) {  // TODO instanceof?
+        if (typeof all === 'string') {
             all = all.split(' ');
 
             all.forEach(part => this.add(part));
         }
         else if (Array.isArray(all)) {
             for (let item of all) {
-                this.add(item.name, item);
+                if (typeof item === 'string') {
+                    this.add(item);
+                } else {
+                    this.add(item.name, item);
+                }
             }
         }
         else {
@@ -101,23 +113,14 @@ class Items {
     }
     
     alias (alias, actualName) {
-        var map = this.map,
-            item = map[actualName],
-            loname = alias.toLowerCase();
-        
-        if (!item) {
-            throw new Error(`No such command "${actualName}" for alias "${alias}"`);
-        }
-
-        map[alias] = map[loname] = item;
-        item.alias.push(alias);
+        throw new Error(`Can only apply aliases to commands: "${alias}" = "${actualName}"`);
     }
     
     canonicalize (name) {
         var entry = this.lookup(name);
 
         if (!entry) {
-            throw new Error(`${name} matches no ${this.kind} for ${this.owner.title}`);
+            throw new Error(`${name} matches no ${this.kinds} for ${this.owner.title}`);
             // "bar" matches no switches for "git commit"
             // "foo" matches no commands for "git"
         }
@@ -125,49 +128,18 @@ class Items {
         return entry.name;
     }
 
-    /**
-     * This method accepts a string and produces an item config object.
-     * @param {String} def
-     * @return {Object}
-     */
-    itemFromString (def) {
-        let match = itemRe.exec(def);
+    canAdd (item) {
+        let name = item.name;
 
-        if (!match) {
-            throw new Error(`Invalid parameter syntax definition: "${def}"`);
+        if (this.map[name] || this.map[item.loname]) {
+            throw new Error(`Duplicate ${this.kind} "${name}"`);
         }
-
-        let item = {
-            name: match[1] || match[4],
-            type: match[2] || match[5] || null
-        };
-        
-        if (item.type) {
-            item.array = !!(match[3] || match[6]);
-        }
-
-        if (match[4]) { // if (optional)
-            // Only store a value if we have one (this property is detected using
-            // the "in" operator):
-            if (match[7] != null) {
-                item.value = match[7];
-            } else if (match[6]) { // This is an optional variadic argument, no need to explicitly define a default value
-                item.value = [];
-                item.vargs = true;
-            }
-        }
-
-        return item;
     }
+    
+    get (name) {
+        var map = this.map;
 
-    itemFromValue (item) {
-        if (item.constructor !== Object) {
-            item = {
-                value: item
-            };
-        }
-
-        return item;
+        return map[name] || map[name.toLowerCase()];
     }
 
     lookup (name) {
@@ -207,7 +179,7 @@ class Items {
             if (matches) {
                 // If we have multiple matches then the name we were given is
                 // ambiguous (so throw):
-                throw new Error(`"${name}" matches multiple ${this.kind} for ${this.owner.title}: ${matches.join(', ')}`);
+                throw new Error(`"${name}" matches multiple ${this.kinds} for ${this.owner.title}: ${matches.join(', ')}`);
                 // "bar" matches multiple switches for "git commit"
                 // "foo" matches multiple commands for "git"
             }
@@ -257,15 +229,6 @@ class Items {
         }
         
         return null;
-    }
-
-    /**
-     * Wraps the given config object as a `Value` or derived type.
-     * @param {Object} item The config object for the derived `Value` type.
-     * @return {Value}
-     */
-    wrap (item) {
-        return new Value(item);
     }
 }
 

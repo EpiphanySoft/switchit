@@ -1,7 +1,15 @@
 "use strict";
 
 const EMPTY = [];
+const Item = require('./Item');
 const Types = require('./Types');
+
+const NAME = '[a-z_]\\w*';
+const itemRe = new RegExp('^\\s*(?:' +
+                '(\w#)?(' + NAME + ')' +   // optional ("switch#" [1]) "name" [2]
+                '(?:[:](' + NAME + '))?' +  // optional ":type" [3]
+                '((?:\\.\\.\\.)|(?:\\[\\]))?'  +   // optional "..." or "[]" [4]
+            ')\\s*$', 'i');
 
 /**
  * This class is the base for each item in an `Items` collection. All `Value` instances
@@ -9,10 +17,99 @@ const Types = require('./Types');
  * providing a `type` config property. If no `type` is specified, the `value` (if given)
  * is used. If neither `type` nor `value` are given, the type defaults to String.
  */
-class Value {
-    constructor (config) {
-        Object.assign(this, config);
+class Value extends Item {
+    /**
+     * This method accepts a string and produces an item config object.
+     * @param {String/Object} def
+     * @param {"parameter"/"switch"} kind
+     * @return {Object}
+     */
+    static parse (def, kind) {
+        if (typeof def !== 'string') {
+            // If we have an Item already or if def is a simple Object, we leave it as
+            // is and return it. Otherwise, assume it is the value property and wrap it
+            // in an object.
+            if (!(def && (def.isItem || def.constructor === Object))) {
+                def = {
+                    value: def
+                };
+            }
 
+            return def;
+        }
+
+        // String syntax: "[ { c # name :type ... [] } ]"
+        //
+        // The "[]" wrapping indicates optionality.
+        // The "{}" wrapping indicates a parameter that is also a switch.
+        // The "c#" prefix configures the single char name (case-sensitive).
+        // The "name" is the canonical name.
+        // The ":type" suffix indicates the data type (string is default).
+        // Either "..." or "[]" indicates multiple values are allowed.
+
+        var valid = true,
+            optional = false,
+            switchy = false,
+            i, item, value;
+
+        // Peel off "[]" from "[foo]" to leave "foo" (remember it as optional).
+        if (def[0] === '[') {
+            valid = def.endsWith(']');
+            if (valid) {
+                def = def.substr(1, def.length - 2);
+                optional = true;
+            }
+        }
+
+        // Peel off "{}" from "{bar}" to leave "bar" (remember it is a switch).
+        // By cascade we also handle "[{foobar}]" combination
+        if (valid && def[0] === '{') {
+            valid = def.endsWith('}');
+            if (valid) {
+                def = def.substr(1, def.length - 2);
+                // Only parameters use "{foo}" syntax
+                valid = kind === 'parameter';
+                switchy = true;
+            }
+        }
+
+        // Lop off the value part of "foo=value" (including the "="):
+        if (valid && optional) {
+            i = def.indexOf('=');
+            if (i > 0) {
+                value = def.substr(i + 1);
+                def = def.substr(0, i);
+            }
+        }
+
+        // Regex the rest... roughly: name(:type)?(...|[])?
+        let match = itemRe.exec(def);
+
+        if (match) {
+            //  "r#recurse:string[]"  // [ ., 'r', 'recurse', 'string', '[]' ]
+            item = {
+                name: match[2],
+                char: match[1] || null,
+                type: match[3] || null,
+                optional: optional,  // may not have a default value...
+                switch: switchy,
+                vargs: !!match[4]
+            };
+        }
+
+        if (!valid) {
+            throw new Error(`Invalid ${kind} definition syntax: "${def}"`);
+        }
+
+        if (value !== undefined) {
+            // Only set a value if we have one (presence is detected via "in" operator):
+            item.value = value;
+        }
+
+        return item;
+    }
+
+    init () {
         // Allow the user to provide "optional:true|false" or "required:true|false"
         // and calculate the other from it:
         if (this.optional !== undefined) {
@@ -40,10 +137,6 @@ class Value {
                 this.type = 'string';
             }
         }
-
-        this.alias = [];
-        
-        this.verify();
     }
 
     /**
