@@ -1,4 +1,5 @@
 'use strict';
+
 const expect = require('expect.js');
 const path = require('path');
 
