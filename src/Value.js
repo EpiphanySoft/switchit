@@ -4,6 +4,13 @@ const EMPTY = [];
 const Item = require('./Item');
 const Types = require('./Types');
 
+const NAME = '[a-z_]\\w*';
+const itemRe = new RegExp('^\\s*(?:' +
+                '(' + NAME + ')' +   // [1]
+                '(?:[:](' + NAME + '))?' +  // optional ":type" [2]
+                '((?:\\.\\.\\.)|(?:\\[\\]))?'  +   // optional "..." or "[]" [3]
+            ')\\s*$', 'i');
+
 /**
  * This class is the base for each item in an `Items` collection. All `Value` instances
  * must have a corresponding defined `Type` in the `Types` registry. This can be set by
@@ -11,6 +18,80 @@ const Types = require('./Types');
  * is used. If neither `type` nor `value` are given, the type defaults to String.
  */
 class Value extends Item {
+    /**
+     * This method accepts a string and produces an item config object.
+     * @param {String} def
+     * @return {Object}
+     */
+    static parse (def) {
+        if (typeof def !== 'string') {
+            if (!def || def.constructor !== Object) {
+                def = {
+                    value: def
+                };
+            }
+
+            return def;
+        }
+
+        var valid = true,
+            optional = false,
+            switchy = false,
+            i, value;
+
+        // Peel off "[]" from "[foo]" to leave "foo" (remember it as optional).
+        if (def[0] === '[') {
+            valid = def.endsWith(']');
+            if (valid) {
+                def = def.substr(1, def.length - 2);
+                optional = true;
+            }
+        }
+
+        // Peel off "{}" from "{bar}" to leave "bar" (remember it is a switch).
+        // By cascade we also handle "[{foobar}]" combination
+        if (valid && def[0] === '{') {
+            valid = def.endsWith('}');
+            if (valid) {
+                def = def.substr(1, def.length - 2);
+                // Only parameters use "{foo}" syntax
+                valid = this.itemType.isParameter;
+                switchy = true;
+            }
+        }
+
+        // Lop off the value part of "foo=value" (including the "="):
+        if (valid && optional) {
+            i = def.indexOf('=');
+            if (i > 0) {
+                value = def.substr(i + 1);
+                def = def.substr(0, i);
+            }
+        }
+
+        // Regex the rest... roughly: name(:type)?(...|[])?
+        let match = itemRe.exec(def);
+
+        if (!match || !valid) {
+            throw new Error(`Invalid ${this.constructor.kind} syntax definition: "${def}"`);
+        }
+
+        let item = {
+            name: match[1],
+            type: match[2] || null,
+            optional: optional,  // may not have a default value...
+            switch: switchy,
+            vargs: !!match[3]
+        };
+
+        if (value !== undefined) {
+            // Only set a value if we have one (presence is detected via "in" operator):
+            item.value = value;
+        }
+
+        return item;
+    }
+
     init () {
         // Allow the user to provide "optional:true|false" or "required:true|false"
         // and calculate the other from it:

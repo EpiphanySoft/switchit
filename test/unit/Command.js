@@ -8,6 +8,10 @@ const Parameters = require('../../src/Parameters');
 const Arguments = require('../../src/Arguments');
 
 describe('Command', function() {
+    function finish (done, promise) {
+        promise.then(() => done(), done);
+    }
+
     it('should describe itself as a Command at the class and instance level', function (done) {
         class Foo extends Command {}
         expect(Foo.isCommand).to.be.true;
@@ -117,7 +121,7 @@ describe('Command', function() {
     it('should consider the case when the execute method fails and reject the promise', function (done) {
         class Foo extends Command {
             execute () {
-                throw new Errnpor('This error should be caught.');
+                throw new Error('This error should be caught.');
             }
         }
         new Foo().run([]).then(() => expect.fail(), () => done());
@@ -219,18 +223,54 @@ describe('Command', function() {
         new Foo().run(['baz']).then(() => expect.fail(), () => done());
     });
 
+    it('should accumulate vargs switches', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.bar).to.equal([1,2]);
+                expect(parameters.baz).to.equal('abc');
+                console.log('foo');
+            }
+        }
+
+        Foo.define({
+            parameters: 'baz',
+            switches: [{
+                name: 'bar',
+                type: 'number',
+                vargs: true
+            }]
+        });
+
+        new Foo().run('--bar=1', '--bar', '2', 'abc').then(done, done);
+    });
+
+    it('should accumulate vargs parameters', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.bar).to.equal([1,2]);
+                expect(parameters.baz).to.equal('abc');
+                console.log('foo');
+            }
+        }
+
+        Foo.define({
+            parameters: '[bar:number[]] baz'
+        });
+
+        new Foo().run('1', '2', 'abc').then(done, done);
+    });
+
     it('should allow moving past optional vargs parameters', function (done) {
         class Foo extends Command {
             execute (parameters) {
                 expect(parameters.bar.length).to.equal(0);
                 expect(parameters.baz).to.equal('abc');
-                done();
             }
         }
         Foo.define({
             parameters: '[bar:number[]] baz'
         });
-        new Foo().run(['abc']);
+        new Foo().run(['abc']).then(done, done);
     });
 
     it('switch with default boolean parameter', function (done) {
@@ -266,7 +306,6 @@ describe('Command', function() {
         });
         new Foo().run([]);
     });
-
 
     it('switch with default boolean parameter supplied', function (done) {
         class Foo extends Command {

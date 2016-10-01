@@ -4,37 +4,17 @@ const Item = require('./Item');
 const Items = require('./Items');
 
 class Cmd extends Item {
-    create (parent) {
-        var cmd = new this.type();
+    static parse (def) {
+        if (typeof def !== 'string') {
+            if (def.isCmdlet) {
+                def = {
+                    type: def
+                };
+            }
 
-        if (parent) {
-            cmd.attach(parent, this.name);
+            return def;
         }
-
-        return cmd;
-    }
-
-    verify () {
-        if (!this.type.isCmdlet) {
-            throw new Error(`Invalid command type "${this.type}" (must extend Cmdlet)`);
-        }
-    }
-}
-
-/**
- * This class manages a case-insensitive collection of named commands.
- * @private
- */
-class Commands extends Items {
-    static get (owner) {
-        return super.get(owner, 'commands');
-    }
-
-    constructor (owner, base) {
-        super(owner, base, 'commands');
-    }
-
-    itemFromString (def) {
+        
         // This method would be called if user calls add('foo') or more likely if they
         // call:
         //
@@ -47,19 +27,49 @@ class Commands extends Items {
         throw new Error(`Missing command definition for ${def}`);
     }
 
-    itemFromValue (item) {
-        if (item.isCmdlet) {
-            item = {
-                type: item
-            };
+    create (parent) {
+        var cmd = new this.type();
+
+        if (parent) {
+            cmd.attach(parent, this.name);
         }
 
-        return item;
+        this.aliases = [];
+
+        return cmd;
     }
 
-    wrap (item) {
-        return new Cmd(item);
+    verify () {
+        if (!this.type.isCmdlet) {
+            throw new Error(`Invalid command type "${this.type}" (must extend Cmdlet)`);
+        }
     }
 }
+
+Cmd.kind = 'command';
+Cmd.kinds = 'commands';
+Cmd.isCmd = Cmd.prototype.isCmd = true;
+
+/**
+ * This class manages a case-insensitive collection of named commands.
+ * @private
+ */
+class Commands extends Items {
+    alias (alias, actualName) {
+        var map = this.map,
+            item = map[actualName],
+            loname = alias.toLowerCase();
+        
+        if (!item) {
+            throw new Error(`No such command "${actualName}" for alias "${alias}"`);
+        }
+
+        map[alias] = map[loname] = item;
+        item.alias.push(alias);
+    }
+}
+
+Commands.itemType = Commands.prototype.itemType = Cmd;
+Commands.isCommands = Commands.prototype.isCommands = true;
 
 module.exports = Commands;

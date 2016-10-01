@@ -6,22 +6,19 @@ const Value = require('./Value');
 class Switch extends Value {
 }
 
+Switch.kind = 'switch';
+Switch.kinds = 'switches';
+Switch.isSwitch = Switch.prototype.isSwitch = true;
+
 /**
  * This class manages a case-insensitive collection of named switches.
  * @private
  */
 class Switches extends Items {
-    static get (owner) {
-        return super.get(owner, 'switches');
-    }
-
-    constructor (owner, base) {
-        super(owner, base, 'switches');
-    }
-
-    wrap (item) {
-        return new Switch(item);
-    }
+    // empty
 }
+
+Switches.itemType = Switches.prototype.itemType = Switch;
+Switches.isSwitches = Switches.prototype.isSwitches = true;
 
 module.exports = Switches;

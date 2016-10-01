@@ -11,9 +11,7 @@ const Types = require('./Types');
 class Item {
     constructor (config) {
         Object.assign(this, config);
-
-        this.alias = [];
-
+        
         if (this.init) {
             this.init();
         }

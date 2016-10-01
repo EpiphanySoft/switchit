@@ -52,10 +52,14 @@ describe('Cmdlet', function() {
     });
 
     it('should accept switches as a single string', function (done) {
-        class Foo extends Cmdlet {}
+        class Foo extends Cmdlet {
+            //
+        }
+        debugger;
         Foo.define({
             switches: '[bar=baz]'
         });
+
         let barSwitch = Foo.switches.lookup('bar');
         expect(barSwitch).to.not.be.null;
         expect(barSwitch.value).to.equal('baz');

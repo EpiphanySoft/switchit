@@ -5,7 +5,7 @@ const ResponseFile = require('./ResponseFile');
 const andRe = /and/i;
 const thenRe = /then/i;
 const andOrThenRe = /and|then/i;
-const expandRe = /^@([@\w\.\/\\\-]+)$/;
+const expandRe = /^@(.+)/;
 
 /**
  * This class manages the String[] of arguments to be dispatched by Cmdlets. It tracks
