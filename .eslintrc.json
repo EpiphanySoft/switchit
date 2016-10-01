@@ -6,18 +6,18 @@
     },
     "rules": {
         "indent": [
-            "error",
+            2,
             4,
             {
                 "SwitchCase": 1
             }
         ],
         "semi": [
-            "error",
+            2,
             "always"
         ],
         "eol-last": [
-            "error",
+            2,
             "unix"
         ]
     }

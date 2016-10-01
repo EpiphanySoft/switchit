@@ -1,5 +1,6 @@
-![switchit logo](resources/switchit_logo.png)
--
+![switchit logo](resources/switchit_logo.png)  
+  
+[![Build Status](https://travis-ci.org/dongryphon/switchit.svg?branch=master)](https://travis-ci.org/dongryphon/switchit)
 # switchit
 A no-nonsense framework for command-line switch parsing and command dispatching.
 
@@ -143,7 +144,7 @@ Let's try a more complete example, a program that can receive your coffee order,
         execute (params) {
             console.log("Let's prepare a cup of coffee.");
             if (params.extra.length > 0) {
-                console.log(`Add the following extras:`);
+                console.log('Add the following extras:');
                 params.extra.forEach(extra => console.log(`- ${extra}`));
             }
         }
@@ -161,11 +162,11 @@ When run with no switches this command prints a simple message:
     $ node examples/variadic.js
     Let's prepare a cup of coffee.
 
-But you can pass toppings as switches:
+But you can pass extras as switches:
 
-    $ node examples/variadic.js --topping Caramel --topping Cinnamon
+    $ node examples/variadic.js --extra Caramel --extra Cinnamon
     Let's prepare a cup of coffee.
-    Add the following toppings:
+    Add the following extras:
      - Caramel
      - Cinnamon
 
@@ -173,7 +174,7 @@ Or as parameters:
 
     $ node examples/variadic.js Caramel Cinnamon
     Let's prepare a cup of coffee.
-    Add the following toppings:
+    Add the following extras:
      - Caramel
      - Cinnamon
 
@@ -329,7 +330,7 @@ Let's test this:
     $ node examples/alias.js koffie
     Let's prepare a cup of coffee.
     $ node examples/alias.js thee
-    Let's prepare a cup of coffee.
+    Let's prepare a cup of tea.
 
 The special alias `default` specifies the action a command container should take when no
 sub-command is specified. Our [`git` mock application](examples/git)'s `remote` command has a
@@ -349,8 +350,12 @@ of [`examples/git/remote/index.js`](examples/git/remote/index.js):
     
     // ... 
 
-And when running on the command line, it looks like this (note the `Syntax` section in the
-help output):
+And when running on the command line, it looks like this:
+
+    $ node examples/git.js remote
+    list all remotes
+
+Note  the `Syntax` section in the help output (more information about help below)
 
     $ node examples/git.js help remote
                            
@@ -360,11 +365,9 @@ help output):
       * add:        Adds a remote reference named <name> for the repository at <url>        
      
      Syntax:
-       git remote   Shows a list of existing remotes
+       git remote                   Shows a list of existing remotes
        git remote (subcommand)      Execute subcommand
      
-    $ node examples/git.js remote
-    list all remotes
 
 ### Response file processing
 

@@ -4,7 +4,7 @@ class BrewCoffee extends Command {
     execute (params) {
         console.log("Let's prepare a cup of coffee.");
         if (params.extra.length > 0) {
-            console.log(`Add the following extras:`);
+            console.log('Add the following extras:');
             params.extra.forEach(extra => console.log(`- ${extra}`));
         }
     }
