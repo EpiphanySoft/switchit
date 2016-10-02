@@ -2,20 +2,19 @@
 
 const EMPTY = [];
 const Item = require('./Item');
-const Types = require('./Types');
+const Type = require('./Type');
 
-const NAME = '[a-z_]\\w*';
 const itemRe = new RegExp('^\\s*(?:' +
-                '(\w#)?(' + NAME + ')' +   // optional ("switch#" [1]) "name" [2]
-                '(?:[:](' + NAME + '))?' +  // optional ":type" [3]
-                '((?:\\.\\.\\.)|(?:\\[\\]))?'  +   // optional "..." or "[]" [4]
+                '(\w#)?([a-z_]\\w*)' +            // optional ("c#" [1]) "name" [2]
+                '(?:[:]([a-z_]\\w*))?' +          // optional ":type" [3]
+                '((?:\\.\\.\\.)|(?:\\[\\]))?'  +  // optional "..." or "[]" [4]
             ')\\s*$', 'i');
 
 /**
- * This class is the base for each item in an `Items` collection. All `Value` instances
- * must have a corresponding defined `Type` in the `Types` registry. This can be set by
- * providing a `type` config property. If no `type` is specified, the `value` (if given)
- * is used. If neither `type` nor `value` are given, the type defaults to String.
+ * This class is used for switches and parameters in an `Items` collection. All `Value`
+ * instances must have a corresponding defined `Type` in the `Types` registry. This can
+ * be set by providing a `type` config property. If no `type` is specified, the `value`
+ * (if given) is used. If neither `type` nor `value` are given, `type` defaults to `string`.
  */
 class Value extends Item {
     /**
@@ -125,10 +124,10 @@ class Value extends Item {
 
         if (!this.type) {
             if ('value' in this) {
-                let type = Types.of(this.value);
+                let type = Type.of(this.value);
 
                 if (!type) {
-                    throw new Error(`No type for "${value}" (use Types.define to define it)`);
+                    throw new Error(`No type for "${value}" (use Type.define to define it)`);
                 }
 
                 this.type = type.name;
@@ -161,6 +160,16 @@ class Value extends Item {
         return def.convert(value);
     }
 
+    mustConvert (value) {
+        var converted = this.convert(value);
+
+        if (converted === null) {
+            throw new Error(`Invalid ${this.typeOf.name} value: "${value}"`);
+        }
+
+        return converted;
+    }
+
     /**
      * Adds a value to the parameter data object. Handles `vargs` by always producing
      * an array.
@@ -181,13 +190,42 @@ class Value extends Item {
     }
     
     verify () {
-        if (!this.typeOf) {
-            throw new Error(`Unknown value type "${this.type}" (use Types.define to define it)`);
+        var type = this.typeOf;
+
+        if (!type) {
+            throw new Error(`Unknown value type "${this.type}" (use Type.define to define it)`);
+        }
+
+        // Handle the default value. It must convert to this type...
+        if ('value' in this) {
+            var v = this.value,
+                c;
+
+            if (!this.vargs) {
+                c = this.mustConvert(v);
+            }
+            else {
+                // Default values for arrays are more tricky. If we have an array,
+                // each element must convert. Otherwise, the value itself is converted
+                // to the first element.
+                c = [];
+
+                if (Array.isArray(v)) {
+                    for (let e of v) {
+                        c.push(this.mustConvert(e));
+                    }
+                }
+                else {
+                    c.push(this.mustConvert(v));
+                }
+            }
+
+            this.value = c;
         }
     }
 
     get typeOf () {
-        return Types.defs[this.type];
+        return Type.defs[this.type];
     }
 }
 

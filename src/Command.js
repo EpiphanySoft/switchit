@@ -28,6 +28,19 @@ class Command extends Cmdlet {
         }
     }
 
+    static defineItemHelp (name, text) {
+        let ok = super.defineItemHelp(name, text);
+
+        let item = this.parameters.get(name);
+
+        if (item) {
+            item.help = text;
+            ok = true;
+        }
+
+        return ok;
+    }
+
     static get parameters () {
         return Parameters.get(this);
     }

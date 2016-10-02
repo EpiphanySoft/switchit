@@ -139,28 +139,16 @@ class Help extends Command {
 }
 
 Help.define({
-    help: 'This command displays help for other commands',
+    help: {
+        '': 'This command displays help for other commands',
 
-    switches: {
-        markdown: {
-            help: 'Display help in markdown format',
-            type: 'boolean',
-            value: false
-        },
-        all: {
-            help: 'Display help for internal, experimental and private commands and switches',
-            type: 'boolean',
-            value: false
-        }
+        all: 'Display help for internal, experimental and private commands and switches',
+        markdown: 'Display help in markdown format',
+        subject: 'The command or category for which to display help.'
     },
 
-    parameters: {
-        subject: {
-            vargs: true,
-            type: 'string',
-            value: []
-        }
-    }
+    switches: '[markdown:boolean=no] [all:boolean=no]',
+    parameters: '[subject...]'
 });
 
 module.exports = Help;

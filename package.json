@@ -1,6 +1,6 @@
 {
   "name": "switchit",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "description": "Command-line Switcher and Dispatcher",
   "homepage": "https://github.com/dongryphon/switchit#readme",
   "author": "Don Griffin",

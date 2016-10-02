@@ -337,6 +337,54 @@ describe('Command', function() {
             new Foo().run('--debug', 'foo'));
     });
 
+    it('switch with default number supplied', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.counter).to.equal(123);
+                return parameters.counter;
+            }
+        }
+
+        Foo.define({
+            switches: '[counter:number=1]'
+        });
+
+        Util.resolves(done, 123,
+            new Foo().run('--counter', '123'));
+    });
+
+    it('switch with default number supplied w/o value', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.counter).to.equal(2);
+                return parameters.counter;
+            }
+        }
+
+        Foo.define({
+            switches: '[counter:number=1]'
+        });
+
+        Util.resolves(done, 2,
+            new Foo().run('-c'));
+    });
+
+    it('switch with default number not supplied', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.counter).to.equal(1);
+                return parameters.counter;
+            }
+        }
+
+        Foo.define({
+            switches: '[counter:number=1]'
+        });
+
+        Util.resolves(done, 1,
+            new Foo().run([]));
+    });
+
     describe('Variadic', () => {
         describe('Switches', () => {
             it('should accumulate vargs switches', function (done) {
@@ -360,7 +408,24 @@ describe('Command', function() {
         });
 
         describe('Parameters', () => {
-            it('should accumulate vargs parameters', function (done) {
+            it('should accumulate all vargs parameters', function (done) {
+                class Foo extends Command {
+                    execute (parameters) {
+                        expect(parameters.bar).to.eql([1, 2, 'abc']);
+
+                        return `[${parameters.bar.join(',')}]`;
+                    }
+                }
+
+                Foo.define({
+                    parameters: 'bar...'
+                });
+
+                Util.resolves(done, '[1,2,abc]',
+                    new Foo().run('1', '2', 'abc'));
+            });
+
+            it('should accumulate vargs parameters and continue', function (done) {
                 class Foo extends Command {
                     execute (parameters) {
                         expect(parameters.bar).to.eql([1,2]);
@@ -398,7 +463,7 @@ describe('Command', function() {
         });
 
         describe('Switches and Parameters', () => {
-            it('should accumulate vargs switches', function (done) {
+            it('should accumulate vargs params and switches together', function (done) {
                 class Foo extends Command {
                     execute (parameters) {
                         expect(parameters.bar).to.eql([1, 2, 3]);

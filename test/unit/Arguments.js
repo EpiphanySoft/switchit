@@ -3,11 +3,11 @@
 const expect = require('expect.js');
 const path = require('path');
 
-const TestUtils = require('../util');
+const Utils = require('../util');
 const Arguments = require('../../src/Arguments');
 
 describe('Arguments', function() {
-    it('should provide a way to move through the argument queue', function (done) {
+    it('should provide a way to move through the argument queue', function () {
         let rawArgs = ['foo', '-a=1', '-b', '2', '--option-c', '3', '--option-d=4', 'and', 'then', 'bar', 'and', 'and', 'then', 'abc', 'baz'];
 
         let args = new Arguments(rawArgs.slice());
@@ -44,11 +44,9 @@ describe('Arguments', function() {
             args.mustPull();
             expect.fail();
         } catch (ignore) {}
-
-        done();
     });
 
-    it('should be iterable using the for...of statement', function (done) {
+    it('should be iterable using the for...of statement', function () {
         let rawArgs = ['foo', 'bar', 'baz'];
 
         let args = new Arguments(rawArgs.slice());
@@ -59,11 +57,10 @@ describe('Arguments', function() {
         }
 
         expect(result).to.equal(rawArgs.join(''));
-        done();
     });
 
-    it('should process and expand response files', function (done) {
-        let rawArgs = [`@${path.join(TestUtils.getTestSourceFilesDir(), 'arguments', 'responsefile.txt')}`];
+    it('should process and expand response files', function () {
+        let rawArgs = [`@${path.join(Utils.getTestSourceFilesDir(), 'arguments', 'responsefile.txt')}`];
 
         let args = new Arguments(rawArgs.slice());
         let result = [];
@@ -71,7 +68,6 @@ describe('Arguments', function() {
             result.push(arg);
         }
 
-        expect(result.join(' ')).to.equal('somefoo then somebar')
-        done();
+        expect(result.join(' ')).to.equal('somefoo then somebar');
     });
 });

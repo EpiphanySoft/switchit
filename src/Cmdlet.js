@@ -2,7 +2,7 @@
 
 const Arguments = require('./Arguments');
 const Switches = require('./Switches');
-const Types = require('./Types');
+const Type = require('./Type');
 
 const paramRe = /^\-{1,2}([a-z_-][\w-]*)$/i;
 const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
@@ -82,9 +82,15 @@ class Cmdlet {
         }
 
         for (let name in members) {
-            if (name !== 'switches') {
+            if (name !== 'switches' && name !== 'help') {
                 this.defineAspect(name, members[name]);
             }
+        }
+
+        // Define help last so it can attach text to any defined switch or
+        // parameter....
+        if (members.help) {
+            this.defineAspect('help', members.help);
         }
     }
 
@@ -93,9 +99,57 @@ class Cmdlet {
             let items = this.switches;
             items.addAll(value);
         }
+        else if (name === 'help') {
+            this.defineHelp(value);
+        }
         else {
             this[name] = value;
         }
+    }
+
+    /**
+     * Handle this type of thing:
+     *
+     *      help: {
+     *          '': 'My help stuff',
+     *
+     *          switch: 'Help on a switch',
+     *          param: 'Help on a parameter'
+     *      }
+     *
+     * Help for sub-commands is handled in the define call for that class.
+     */
+    static defineHelp (value) {
+        if (typeof value === 'string') {
+            this.help = value;
+        }
+        else if (value) {
+            for (let name in value) {
+                let text = value[name];
+
+                if (name === '') {
+                    this.help = text;
+                } else {
+                    let ok = this.defineItemHelp(name, text);
+
+                    if (!ok) {
+                        throw new Error(`No parameter or switch "${name}" for help text "${text}"`);
+                    }
+                }
+            }
+        }
+    }
+    
+    static defineItemHelp (name, text) {
+        let item = this.switches.get(name);
+        let ok;
+
+        if (item) {
+            item.help = text;
+            ok = true;
+        }
+        
+        return ok;
     }
 
     static get switches () {
@@ -189,7 +243,7 @@ class Cmdlet {
 
     parseSwitch (args, arg) {
         var params = this.params,
-            entry, m, name, value;
+            converted, entry, m, name, value;
         
         if (!(m = paramRe.exec(arg))) {
             if (!(m = paramAssignRe.exec(arg))) {
@@ -208,35 +262,55 @@ class Cmdlet {
         name = this.switches.canonicalize(m[1]);
         entry = this.switches.lookup(name);
 
-        if (value === undefined) {
+        if (value !== undefined) {
+            converted = entry.convert(value);
+        } else {
             // --param value
+            value = args.peek();
 
-            if (entry.type !== 'boolean') {
-                value = args.mustPull();
+            converted = entry.convert(value);
+
+            if (converted !== null) {
+                // --bool true|false|...
+                // --number 42
+                args.advance();
             }
-            else {
+            else if (entry.type === 'boolean') {
                 // We allow "-foo" to toggle a boolean value if no value is provided
-                value = args.peek();
 
-                let bv = Types.boolean.convert(value);
-                if (bv === null) {
-                    value = !((name in params) ? params[name] : entry.value);
+                if (name in params) {
+                    converted = !params[name];
+                }
+                else if ('value' in entry) {
+                    converted = !entry.value;
                 }
                 else {
-                    // --bool true|false|...
-                    args.advance();
-                    value = bv;
+                    // No value to toggle, so fail...
+                    args.mustPull();
                 }
+            }
+            else if (entry.type === 'number') {
+                if (name in params) {
+                    converted = params[name] + 1;
+                }
+                else if ('value' in entry) {
+                    converted = entry.value + 1;
+                }
+                else {
+                    // No value to toggle, so fail...
+                    args.mustPull();
+                }
+            }
+            else {
+                args.mustPull();
             }
         }
 
-        let v = entry.convert(value);
-
-        if (v === null) {
+        if (converted === null) {
             this.raise(`Invalid value for "${name}": "${value}" (expected ${entry.type})`);
         }
 
-        return [entry, v];
+        return [entry, converted];
     }
 
     processArg (args, arg) {
