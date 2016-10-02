@@ -1,5 +1,6 @@
 "use strict";
 
+const expect = require('expect.js');
 const fs = require('fs-extra');
 const path = require('path');
 
@@ -14,6 +15,7 @@ class Util {
             Util.stdoutHook = null;
         }
 
+        //console.log('>>> Hooking stdout');
         var oldWrite = stream.write;
         var buf = '';
         stream.write = function(chunk, encoding, callback){
@@ -24,6 +26,7 @@ class Util {
         return Util.stdoutHook = {
             unhook: function unhook(){
                 stream.write = oldWrite;
+                //console.log('>>> Unhooking stdout');
             },
             captured: function(){
                 return stripAnsi(buf);
@@ -115,12 +118,53 @@ class Util {
         }
     }
 
-    static resolves (done, promise) {
-        return promise.then(() => done(), e => done(e || 'Promise should have resolved'));
+    static resolves (done, result, promise) {
+        if (!promise) {
+            promise = result;
+            result = undefined;
+        }
+
+        return promise.then(v => {
+            try {
+                if (result !== undefined) {
+                    if (typeof result === 'function') {
+                        result(v);
+                    } else {
+                        expect(v).to.be(result);
+                    }
+                }
+                done();
+            } catch (e) {
+                done(e);
+            }
+        },
+        e => done(e || 'Promise should have resolved'));
     }
 
-    static rejects (done, promise) {
-        return promise.then(() => done('Promise should have rejected'), e => done());
+    static rejects (done, message, promise) {
+        if (!promise) {
+            promise = message;
+            message = undefined;
+        }
+
+        return promise.then(() => done('Promise should have rejected'),
+            e => {
+                try {
+                    if (message !== undefined) {
+                        let v = e.message || e;
+
+                        if (typeof message === 'function') {
+                            message(v);
+                        } else {
+                            expect(v).to.contain(message);
+                        }
+                    }
+
+                    done();
+                } catch (e) {
+                    done(e);
+                }
+            });
     }
 }
 

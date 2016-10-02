@@ -11,7 +11,7 @@ Remote.define({
     help: 'Commands to manage remote references',
     commands: {
         add: AddRemote,
-        default: ListRemote
+        '': ListRemote
     }
 });
 

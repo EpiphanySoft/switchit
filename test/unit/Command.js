@@ -111,11 +111,12 @@ describe('Command', function() {
     it('should return a promise when dispatching a call', function (done) {
         class Foo extends Command {
             execute () {
-                //
+                return 'xyz';
             }
         }
 
-        Util.resolves(done, new Foo().run([]));
+        Util.resolves(done, 'xyz',
+            new Foo().run([]));
     });
 
     it('should consider the case when the execute method fails and reject the promise', function (done) {
@@ -125,7 +126,8 @@ describe('Command', function() {
             }
         }
 
-        Util.rejects(done, new Foo().run([]));
+        Util.rejects(done, 'This error should be caught.',
+            new Foo().run([]));
     });
 
     it('should reject the promise if a required switch is not present', function (done) {
@@ -135,7 +137,8 @@ describe('Command', function() {
             switches: 'bar'
         });
 
-        Util.rejects(done, new Foo().run([]));
+        Util.rejects(done, 'Missing required switch "bar"',
+            new Foo().run([]));
     });
 
     it('should reject the promise if a required parameter is not present', function (done) {
@@ -145,7 +148,8 @@ describe('Command', function() {
             parameters: 'bar'
         });
 
-        Util.rejects(done, new Foo().run([]));
+        Util.rejects(done, 'Missing required parameter "bar"',
+            new Foo().run([]));
     });
 
 
@@ -155,6 +159,8 @@ describe('Command', function() {
                 expect(arguments.length).to.equal(2);
                 expect(arguments[0]).to.be.a(Object);
                 expect(arguments[1]).to.be.a(Arguments);
+
+                return 'hello';
             }
         }
 
@@ -162,13 +168,15 @@ describe('Command', function() {
             switches: '[bar=baz]'
         });
 
-        Util.resolves(done, new Foo().run([]));
+        Util.resolves(done, 'hello',
+            new Foo().run([]));
     });
 
     it('should pass the parameters both as args of the execute call and the this.params property', function (done) {
         class Foo extends Command {
             execute (parameters) {
                 expect(parameters).to.equal(this.params);
+                return parameters.bar;
             }
         }
 
@@ -176,7 +184,8 @@ describe('Command', function() {
             switches: '[bar=baz]'
         });
 
-        Util.resolves(done, new Foo().run([]));
+        Util.resolves(done, 'baz',
+            new Foo().run([]));
     });
 
     it('should process switches as part of the dispatch call', function (done) {
@@ -184,6 +193,8 @@ describe('Command', function() {
             execute (parameters) {
                 expect(parameters.bar).to.equal('test');
                 expect(this.params.bar).to.equal('test');
+
+                return parameters.bar;
             }
         }
 
@@ -191,14 +202,17 @@ describe('Command', function() {
             switches: 'bar'
         });
 
-        Util.resolves(done, new Foo().run(['--bar', 'test']));
+        Util.resolves(done, 'test',
+            new Foo().run(['--bar', 'test']));
     });
 
     it('should process parameters as part of the dispatch call', function (done) {
         class Foo extends Command {
             execute (parameters) {
-                expect(parameters.bar).to.equal('test');
-                expect(this.params.bar).to.equal('test');
+                expect(parameters.bar).to.equal('test42');
+                expect(this.params.bar).to.equal('test42');
+
+                return parameters.bar;
             }
         }
 
@@ -206,7 +220,8 @@ describe('Command', function() {
             parameters: 'bar'
         });
 
-        Util.resolves(done, new Foo().run(['test']));
+        Util.resolves(done, 'test42',
+            new Foo().run(['test42']));
     });
 
     it('should not pass extra positional arguments as parameters', function (done) {
@@ -215,6 +230,8 @@ describe('Command', function() {
                 expect(parameters.bar).to.equal('baz');
                 expect(this.params.bar).to.equal('baz');
                 expect(Object.keys(parameters).length).to.equal(this.constructor.parameters.items.length);
+
+                return parameters.bar;
             }
         }
 
@@ -222,7 +239,8 @@ describe('Command', function() {
             parameters: 'bar'
         });
 
-        Util.resolves(done, new Foo().run(['baz', 'abc']));
+        Util.resolves(done, 'baz',
+            new Foo().run(['baz', 'abc'])); // TODO should fail on "abc"
     });
 
     it('should reject invalid values for parameter types', function (done) {
@@ -232,59 +250,15 @@ describe('Command', function() {
             parameters: 'bar:number'
         });
 
-        Util.rejects(done, new Foo().run(['baz']));
-    });
-
-    it('should accumulate vargs switches', function (done) {
-        class Foo extends Command {
-            execute (parameters) {
-                expect(parameters.bar).to.eql([1,2]);
-                expect(parameters.baz).to.equal('abc');
-            }
-        }
-
-        Foo.define({
-            parameters: 'baz',
-            switches: '[bar:number...]'
-        });
-
-        Util.resolves(done, new Foo().run('--bar=1', '--bar', '2', 'abc'));
-    });
-
-    it('should accumulate vargs parameters', function (done) {
-        class Foo extends Command {
-            execute (parameters) {
-                expect(parameters.bar).to.eql([1,2]);
-                expect(parameters.baz).to.equal('abc');
-            }
-        }
-
-        Foo.define({
-            parameters: '[bar:number[]] baz'
-        });
-
-        Util.resolves(done, new Foo().run('1', '2', 'abc'));
-    });
-
-    it('should allow moving past optional vargs parameters', function (done) {
-        class Foo extends Command {
-            execute (parameters) {
-                expect(parameters.bar.length).to.equal(0);
-                expect(parameters.baz).to.equal('abc');
-            }
-        }
-
-        Foo.define({
-            parameters: '[bar:number[]] baz'
-        });
-
-        Util.resolves(done, new Foo().run(['abc']));
+        Util.rejects(done, 'Invalid value for "bar": "baz" (expected number)',
+            new Foo().run(['baz']));
     });
 
     it('switch with default boolean parameter', function (done) {
         class Foo extends Command {
             execute (parameters) {
                 expect(parameters.debug).to.equal(true);
+                return parameters.debug;
             }
         }
 
@@ -296,13 +270,15 @@ describe('Command', function() {
             }
         });
 
-        Util.resolves(done, new Foo().run('--debug'));
+        Util.resolves(done, true,
+            new Foo().run('--debug'));
     });
 
     it('switch with default boolean parameter not supplied', function (done) {
         class Foo extends Command {
             execute (parameters) {
                 expect(parameters.debug).to.equal(false);
+                return parameters.debug;
             }
         }
 
@@ -314,13 +290,15 @@ describe('Command', function() {
             }
         });
 
-        Util.resolves(done, new Foo().run([]));
+        Util.resolves(done, false,
+            new Foo().run([]));
     });
 
     it('switch with default boolean parameter supplied', function (done) {
         class Foo extends Command {
             execute (parameters) {
                 expect(parameters.debug).to.equal(true);
+                return parameters.debug;
             }
         }
 
@@ -332,7 +310,8 @@ describe('Command', function() {
             }
         });
 
-        Util.resolves(done, new Foo().run('--debug', 'true'));
+        Util.resolves(done, true,
+            new Foo().run('--debug', 'true'));
     });
 
     it('switch does not consume the following parameter', function (done) {
@@ -340,6 +319,8 @@ describe('Command', function() {
             execute (parameters) {
                 expect(parameters.debug).to.equal(true);
                 expect(parameters.foo).to.equal('foo');
+
+                return parameters.foo;
             }
         }
 
@@ -352,6 +333,88 @@ describe('Command', function() {
             }
         });
 
-        Util.resolves(done, new Foo().run('--debug', 'foo'));
+        Util.resolves(done, 'foo',
+            new Foo().run('--debug', 'foo'));
+    });
+
+    describe('Variadic', () => {
+        describe('Switches', () => {
+            it('should accumulate vargs switches', function (done) {
+                class Foo extends Command {
+                    execute (parameters) {
+                        expect(parameters.bar).to.eql([3,4]);
+                        expect(parameters.baz).to.equal('abc');
+
+                        return `${parameters.baz} [${parameters.bar.join(',')}]`;
+                    }
+                }
+
+                Foo.define({
+                    parameters: 'baz',
+                    switches: '[bar:number...]'
+                });
+
+                Util.resolves(done, 'abc [3,4]',
+                    new Foo().run('--bar=3', '--bar', '4', 'abc'));
+            });
+        });
+
+        describe('Parameters', () => {
+            it('should accumulate vargs parameters', function (done) {
+                class Foo extends Command {
+                    execute (parameters) {
+                        expect(parameters.bar).to.eql([1,2]);
+                        expect(parameters.baz).to.equal('abc');
+
+                        return `${parameters.baz} [${parameters.bar.join(',')}]`;
+                    }
+                }
+
+                Foo.define({
+                    parameters: '[bar:number[]] baz'
+                });
+
+                Util.resolves(done, 'abc [1,2]',
+                    new Foo().run('1', '2', 'abc'));
+            });
+
+            it('should allow moving past optional vargs parameters', function (done) {
+                class Foo extends Command {
+                    execute (parameters) {
+                        expect(parameters.bar.length).to.equal(0);
+                        expect(parameters.baz).to.equal('abc');
+
+                        return `${parameters.baz} [${parameters.bar.join(',')}]`;
+                    }
+                }
+
+                Foo.define({
+                    parameters: '[bar:number[]] baz'
+                });
+
+                Util.resolves(done, 'abc []',
+                    new Foo().run(['abc']));
+            });
+        });
+
+        describe('Switches and Parameters', () => {
+            it('should accumulate vargs switches', function (done) {
+                class Foo extends Command {
+                    execute (parameters) {
+                        expect(parameters.bar).to.eql([1, 2, 3]);
+                        expect(parameters.baz).to.equal('abc');
+
+                        return `${parameters.baz} [${parameters.bar.join(',')}]`;
+                    }
+                }
+
+                Foo.define({
+                    parameters: 'baz [{bar:number...}]'
+                });
+
+                Util.resolves(done, 'abc [1,2,3]',
+                    new Foo().run('--bar=1', '--bar', '2', 'abc', '3'));
+            });
+        });
     });
 });

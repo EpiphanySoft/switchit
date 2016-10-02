@@ -332,7 +332,7 @@ Let's test this:
     $ node examples/alias.js thee
     Let's prepare a cup of tea.
 
-The special alias `default` specifies the action a command container should take when no
+The "empty string" command specifies the action a command container should take when no
 sub-command is specified. Our [`git` mock application](examples/git)'s `remote` command has a
 special [`ListRemote`](examples/git/remote/ls.js) command as default. These are the contents
 of [`examples/git/remote/index.js`](examples/git/remote/index.js):
@@ -344,7 +344,7 @@ of [`examples/git/remote/index.js`](examples/git/remote/index.js):
         help: 'Commands to manage remote references',
         commands: {
             add: AddRemote,
-            default: ListRemote
+            '': ListRemote
         }
     });
     
@@ -495,7 +495,7 @@ output of the help command.
        git commit [options]
     
 When no sub-container or sub-command is passed to a container, its help page is displayed
-automatically, unless it defined a `default` alias for a command (more information on the
+automatically, unless it defined its own default sub-command (more information on the
 [Custom aliases](#custom-aliases-and-default-sub-command) section).
 
     $ node examples/git.js

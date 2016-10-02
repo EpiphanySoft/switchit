@@ -90,7 +90,7 @@ class Command extends Cmdlet {
         if (value === null) {
             // Cannot accept this value for this parameter
             if (param.required) {
-                this.raise(`Invalid ${param.type} value for ${param.name}: "${arg}"`);
+                this.raise(`Invalid value for "${param.name}": "${arg}" (expected ${param.type})`);
             }
 
             // Since this param is optional, skip to the next candidate and

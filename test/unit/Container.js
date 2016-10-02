@@ -140,29 +140,25 @@ describe('Container', function() {
         class Foo extends Container {}
         class Bar extends Command {
             execute () {
-                // empty
+                return 123;
             }
         }
 
         Foo.define({
             commands: {
-                default: Bar
+                '': Bar
             }
         });
 
-        Util.resolves(done, new Foo().run([]));
-    });
-
-    it('should return a promise when dispatching a call', function (done) {
-        class Foo extends Container {}
-
-        Util.resolves(done, new Foo().run([]));
+        Util.resolves(done, 123,
+            new Foo().run([]));
     });
 
     it('should reject the promise if the command does not exist', function (done) {
         class Foo extends Container {}
 
-        Util.rejects(done, new Foo().run(['test'])); //.then(() => expect.fail(), () => done());
+        Util.rejects(done, 'No such command or category "foo"',
+            new Foo().run(['foo']));
     });
 
     it('should consider the case when the execute method of a dispatched command fails and reject the promise', function (done) {
@@ -177,7 +173,8 @@ describe('Container', function() {
             commands: [ Bar ]
         });
 
-        Util.rejects(done, new Foo().run(['bar']));//.then(() => expect.fail(), () => done());
+        Util.rejects(done, 'This error should be caught.',
+            new Foo().run(['bar']));
     });
 
     it('should reject the promise if a required switch is not present', function (done) {
@@ -191,7 +188,8 @@ describe('Container', function() {
             commands: [ Bar ]
         });
 
-        Util.rejects(done, new Foo().run(['bar'])); //.then(() => expect.fail(), () => done());
+        Util.rejects(done, 'Missing required switch "baz"',
+            new Foo().run(['bar']));
     });
 
     it('should pass its switches to the dispatched command execute call as this.parent.params', function (done) {
@@ -199,6 +197,7 @@ describe('Container', function() {
         class Bar extends Command {
             execute () {
                 expect(this.parent.params.baz).to.equal('test');
+                return 42;
             }
         }
 
@@ -207,14 +206,15 @@ describe('Container', function() {
             commands: [ Bar ]
         });
 
-        Util.resolves(done, new Foo().run(['--baz', 'test', 'bar']));
+        Util.resolves(done, 42,
+            new Foo().run(['--baz', 'test', 'bar']));
     });
 
     it('should not pass extra positional arguments as parameters', function (done) {
         class Foo extends Container {}
         class Bar extends Command {
             execute () {
-                // empty
+                return 427;
             }
         }
 
@@ -222,7 +222,8 @@ describe('Container', function() {
             commands: [ Bar ]
         });
 
-        Util.resolves(done, new Foo().run(['bar', 'baz']));
+        Util.resolves(done, 427,
+            new Foo().run(['bar', 'baz']));  // TODO this should fail on baz
     });
 
     it('should respect the and/then notion of command chaining', function (done) {
@@ -256,10 +257,10 @@ describe('Container', function() {
             commands: [Bar, Abc]
         });
 
-        Util.resolves(done,
-            new Foo().run(['bar', 'baz', 'and', 'xyz', 'then', 'abc', 'def']).then(() => {
-                expect(ret.join(' ')).to.equal('It works fine!')
-            }));
+        Util.resolves(done, () => {
+                expect(ret.join(' ')).to.equal('It works fine!');
+            },
+            new Foo().run(['bar', 'baz', 'and', 'xyz', 'then', 'abc', 'def']));
     });
 
     it('should provide subcommands a way to calculate their full name', function (done) {
@@ -269,7 +270,7 @@ describe('Container', function() {
         }
         class Baz extends Command {
             execute() {
-                expect(this.fullName).to.equal('Foo Bar Baz');
+                return this.fullName;
             }
         }
 
@@ -280,7 +281,8 @@ describe('Container', function() {
             commands: [Bar]
         });
 
-        Util.resolves(done, new Foo().run(['bar', 'baz']));
+        Util.resolves(done, 'Foo Bar Baz',
+            new Foo().run(['bar', 'baz']));
     });
 
     it('should provide a way to specify its own title', function (done) {
@@ -288,7 +290,7 @@ describe('Container', function() {
         }
         class Bar extends Command {
             execute() {
-                expect(this.fullName).to.equal('somefoo Bar');
+                return this.fullName;
             }
         }
 
@@ -297,7 +299,8 @@ describe('Container', function() {
             commands: [Bar]
         });
 
-        Util.resolves(done, new Foo().run(['bar']));
+        Util.resolves(done, 'somefoo Bar',
+            new Foo().run(['bar']));
     });
 
     it('should provide a way to move across the execution tree', function (done) {
@@ -308,11 +311,17 @@ describe('Container', function() {
         class Baz extends Command {
             execute() {
                 let root = this.root();
+
+                expect(this.up().down()).to.be(this);
+
                 expect(root).to.be.a(Foo);
                 expect(root.down()).to.be.a(Bar);
                 expect(root.down().up()).to.be.a(Foo);
                 expect(root.leaf()).to.be.a(Baz);
-                expect(root.leaf()).to.equal(this);
+
+                expect(root.leaf()).to.be(this);
+
+                return this.up().name;
             }
         }
 
@@ -320,10 +329,13 @@ describe('Container', function() {
             commands: [Baz]
         });
         Foo.define({
-            commands: [Bar]
+            commands: {
+                bar: Bar
+            }
         });
 
-        Util.resolves(done, new Foo().run(['bar', 'baz']));
+        Util.resolves(done, 'bar',
+            new Foo().run(['bar', 'baz']));
     });
 
     describe('Help', function () {

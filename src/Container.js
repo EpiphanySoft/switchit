@@ -35,8 +35,9 @@ class Container extends Cmdlet {
             let arg = args.pull();
 
             if (!arg) {
-                let defaultCmd = me.commands.lookup('default'),
+                let defaultCmd = me.commands.get(''),
                     defaultCmdName;
+
                 if (defaultCmd) {
                     defaultCmdName = defaultCmd.name;
                     defaultCmd = defaultCmd.type;
@@ -45,9 +46,18 @@ class Container extends Cmdlet {
                     defaultCmdName = 'help';
                     defaultCmd = Help;
                 }
-                new defaultCmd().attach(me, defaultCmdName).dispatch(args);
-                args.ownerPop(me);
-                resolve(0);
+
+                let cmd = new defaultCmd().attach(me, defaultCmdName);
+
+                cmd.dispatch(args).then(v => {
+                    args.ownerPop(me);
+                    resolve(v);
+                },
+                e => {
+                    args.ownerPop(me);
+                    reject(e);
+                });
+
                 return;
             }
 

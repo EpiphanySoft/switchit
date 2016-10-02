@@ -52,6 +52,14 @@ class Items {
         }
     }
 
+    get kind () {
+        return this.constructor.kind;
+    }
+
+    get kinds () {
+        return this.constructor.kinds;
+    }
+
     add (name, item) {
         var ItemType = this.itemType,
             kind = this.constructor.kind;
@@ -225,7 +233,7 @@ class Items {
         }
         
         if (missing) {
-            return `Missing required ${this.kind}: ${missing.join(', ')}`;
+            return `Missing required ${this.kind} "${missing.join(', ')}"`;
         }
         
         return null;

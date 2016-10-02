@@ -233,7 +233,7 @@ class Cmdlet {
         let v = entry.convert(value);
 
         if (v === null) {
-            this.raise(`Invalid ${entry.type} value for ${name}: "${value}"`);
+            this.raise(`Invalid value for "${name}": "${value}" (expected ${entry.type})`);
         }
 
         return [entry, v];
