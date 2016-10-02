@@ -128,29 +128,18 @@ class BooleanType extends Type {
     }
 
     convert (value) {
-        var t = typeof value,
-            r = value;
+        var r = value;
 
-        switch (t) {
-            default:
-                r = String(r);
+        if (typeof value !== 'boolean') {
+            r = String(r);
 
-                if (this.trueRe.test(r)) {
-                    r = true;
-                } else if (this.falseRe.test(r)) {
-                    r = false;
-                } else {
-                    r = null;
-                }
-
-                break;
-
-            case 'boolean':
-                break;
-
-            case 'number':
-                r = !!r;
-                break;
+            if (this.trueRe.test(r)) {
+                r = true;
+            } else if (this.falseRe.test(r)) {
+                r = false;
+            } else {
+                r = null;
+            }
         }
 
         return r;
@@ -180,17 +169,30 @@ class NumberType extends Type {
     constructor () {
         super({
             default: 0,
-            name: 'number'
+            name: 'number',
+
+            re: /^[-+]?[0-9]*\.?[0-9]+(?:e[-+]?[0-9]+)?$/i
         });
     }
 
     convert (value) {
-        var r = +value;  // op+ is a strict parser (+'5a' === NaN)
+        var r = +value;  // good start...
 
-        if (value == null || isNaN(r)) {
-            // +null === 0 (oh yeah)
-            // isNaN(null) === false (srsly!)
-            r = null;
+        if (typeof value !== 'number') {
+            // parseFloat accepts numbers followed by non-sense...
+            // Beware of operator + and isNaN...
+            //
+            //      +'' === 0 (ok...)
+            //      +null === 0 (oh yeah)
+            //      isNaN(null) === false (srsly!)
+            //      isNaN('') === false (now you're just being mean!)
+            //      +'  \t ' === 0  (out of here!)
+
+            let s = String(value);
+
+            if (!this.re.test(s)) {
+                r = null;
+            }
         }
 
         return r;
