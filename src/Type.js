@@ -155,7 +155,7 @@ class DateType extends Type {
     }
 
     convert (value) {
-        // TODO
+        return null;
     }
 
     is (value) {
@@ -217,7 +217,7 @@ class StringType extends Type {
 }
 
 Type.define(new BooleanType());
-//Type.define(new DateType());
+Type.define(new DateType());
 Type.define(new NumberType());
 Type.define(new StringType());
 

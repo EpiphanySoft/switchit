@@ -106,7 +106,7 @@ describe('Container', function() {
                     }  // Bar does not extend from Cmdlet
                 }
             });
-            expect.fail();
+            expect().fail();
         } catch (ex) {
             // good!
         }
@@ -120,7 +120,7 @@ describe('Container', function() {
                 commands: 'bar'
             });
 
-            expect.fail();
+            expect().fail();
         } catch (ex) {
             // good
         }
@@ -136,7 +136,83 @@ describe('Container', function() {
         expect(Foo.bar).to.be.ok();
     });
 
-    it('should allow the definition of a default command other than "help"', function (done) {
+    it('should allow commands to have a custom aliases', function (done) {
+        class Foo extends Container {}
+        class Bar extends Command {
+            execute() {
+                return 123;
+            }
+        }
+
+        Foo.define({
+            commands: {
+                bar: Bar,
+                baz: 'bar'
+            }
+        });
+
+        Util.resolves(done, 123, new Foo().run(['baz']));
+    });
+
+    it('should allow using shortest unique prefixes for command execution', function (done) {
+        class Foo extends Container {}
+        class Bar extends Command {
+            execute() {
+                return 123;
+            }
+        }
+
+        Foo.define({
+            commands: {
+                bar: Bar,
+                xyz: 'bar'
+            }
+        });
+
+        Util.resolves(done, 123, new Foo().run(['b']));
+    });
+
+    it('should reject the promise if ambiguous prefixes are used for command invocation', function (done) {
+        class Foo extends Container {}
+        class Bar extends Command {
+            execute() {
+                return 123;
+            }
+        }
+
+        Foo.define({
+            commands: {
+                bar: Bar,
+                baz: Bar
+            }
+        });
+
+        Util.rejects(done, '"b" matches multiple commands for Foo: bar, baz', new Foo().run(['b']));
+    });
+
+    it('should throw when an invalid command is defined', function (done) {
+        class Foo extends Container {}
+        class Bar extends Command {
+            execute() {
+                return 123;
+            }
+        }
+
+        try {
+            Foo.define({
+                commands: {
+                    bar: Bar,
+                    baz: 'abc'
+                }
+            });
+            expect().fail();
+        } catch (ex) {
+            expect(ex.message).to.equal('No such command "abc" for alias "baz"');
+            done();
+        }
+    });
+
+    it('should allow the definition of a custom default command', function (done) {
         class Foo extends Container {}
         class Bar extends Command {
             execute () {
@@ -156,9 +232,12 @@ describe('Container', function() {
 
     it('should reject the promise if the command does not exist', function (done) {
         class Foo extends Container {}
+        Foo.define({
+            title: 'foo'
+        });
 
-        Util.rejects(done, 'No such command or category "foo"',
-            new Foo().run(['foo']));
+        Util.rejects(done, 'No such command or category "foo bar"',
+            new Foo().run(['bar']));
     });
 
     it('should consider the case when the execute method of a dispatched command fails and reject the promise', function (done) {
@@ -206,24 +285,64 @@ describe('Container', function() {
             commands: [ Bar ]
         });
 
+        var foo = new Foo();
+
         Util.resolves(done, 42,
-            new Foo().run(['--baz', 'test', 'bar']));
+            foo.run('--baz', 'test', 'bar'));
     });
 
-    it('should not pass extra positional arguments as parameters', function (done) {
+    it('should do implicit command chaining at root and skip non-parsable parameters', function (done) {
         class Foo extends Container {}
         class Bar extends Command {
-            execute () {
+            execute (params) {
+                this.up().x = params.x;
                 return 427;
+            }
+        }
+        class Baz extends Command {
+            execute () {
+                return 123 + this.up().x;
             }
         }
 
         Foo.define({
-            commands: [ Bar ]
+            commands: [
+                Bar,
+                Baz
+            ]
+        });
+        Bar.define({
+            parameters: '[x:number=321]'
         });
 
-        Util.resolves(done, 427,
-            new Foo().run(['bar', 'baz']));  // TODO this should fail on baz
+        Util.resolves(done, 123+321,
+            new Foo().run('bar', 'baz'));
+    });
+
+    it('should not allow implicit command chaining at non-root', function (done) {
+        class Foo extends Container {}
+        class Bar extends Container {}
+        class Baz extends Command {
+            execute () {}
+        }
+        class Xyz extends Command {
+            execute () {}
+        }
+
+        Bar.define({
+            commands: [Baz, Xyz]
+        });
+
+        Foo.define({
+            commands: [Bar]
+        });
+
+        new Foo().run(['bar', 'baz', 'then','bar', 'baz','xyz']).then(() => {
+            expect().fail();
+        }, (e) => {
+            expect(e.message).to.equal('Invalid command "xyz" following "Foo Bar"');
+            done();
+        });
     });
 
     it('should respect the and/then notion of command chaining', function (done) {
@@ -247,20 +366,22 @@ describe('Container', function() {
             }
         }
 
-        Bar.define({
-            commands: [Baz, Xyz]
+        Foo.define({
+            commands: [Abc, Bar]
         });
         Abc.define({
             commands: [Def]
         });
-        Foo.define({
-            commands: [Bar, Abc]
+        Bar.define({
+            commands: [Baz, Xyz]
         });
+
+        var foo = new Foo();
 
         Util.resolves(done, () => {
                 expect(ret.join(' ')).to.equal('It works fine!');
             },
-            new Foo().run(['bar', 'baz', 'and', 'xyz', 'then', 'abc', 'def']));
+            foo.run('bar', 'baz', 'and', 'xyz', 'then', 'abc', 'def'));
     });
 
     it('should provide subcommands a way to calculate their full name', function (done) {
@@ -304,12 +425,11 @@ describe('Container', function() {
     });
 
     it('should provide a way to move across the execution tree', function (done) {
-        class Foo extends Container {
-        }
-        class Bar extends Container {
-        }
-        class Baz extends Command {
-            execute() {
+        class Foo extends Container {}
+        class Bar extends Container {}
+        class Baz extends Container {}
+        class Abc extends Command {
+            execute () {
                 let root = this.root();
 
                 expect(this.up().down()).to.be(this);
@@ -317,16 +437,26 @@ describe('Container', function() {
                 expect(root).to.be.a(Foo);
                 expect(root.down()).to.be.a(Bar);
                 expect(root.down().up()).to.be.a(Foo);
-                expect(root.leaf()).to.be.a(Baz);
-
+                expect(root.leaf()).to.be.a(Abc);
+                expect(root.down('baz')).to.be.a(Baz);
                 expect(root.leaf()).to.be(this);
+                expect(this.up('bar')).to.be.a(Bar);
 
                 return this.up().name;
             }
         }
 
+        Baz.define({
+            commands: {
+                Abc: Abc
+            }
+        });
+
         Bar.define({
-            commands: [Baz]
+            commands: [{
+                name: 'baz',
+                type: Baz
+            }]
         });
         Foo.define({
             commands: {
@@ -334,8 +464,8 @@ describe('Container', function() {
             }
         });
 
-        Util.resolves(done, 'bar',
-            new Foo().run(['bar', 'baz']));
+        Util.resolves(done, 'baz',
+            new Foo().run(['bar', 'baz', 'abc']));
     });
 
     describe('Help', function () {
@@ -343,8 +473,10 @@ describe('Container', function() {
             class Foo extends Container {
             }
 
+            var foo = new Foo();
+
             Util.resolves(done, Util.capturesStdout(() => {
-                new Foo().run([]);
+                return foo.run([]);
             }).then(out => {
                 expect(out).to.equal(' \n Foo\n \n Syntax:\n   foo\n');
             }));

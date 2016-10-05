@@ -5,7 +5,7 @@ const Item = require('./Item');
 const Type = require('./Type');
 
 const itemRe = new RegExp('^\\s*(?:' +
-                '(\w#)?([a-z_]\\w*)' +            // optional ("c#" [1]) "name" [2]
+                '(?:([a-z])#)?([a-z_]\\w*)' +         // optional ("c#" [1]) "name" [2]
                 '(?:[:]([a-z_]\\w*))?' +          // optional ":type" [3]
                 '((?:\\.\\.\\.)|(?:\\[\\]))?'  +  // optional "..." or "[]" [4]
             ')\\s*$', 'i');
@@ -127,7 +127,7 @@ class Value extends Item {
                 let type = Type.of(this.value);
 
                 if (!type) {
-                    throw new Error(`No type for "${value}" (use Type.define to define it)`);
+                    throw new Error(`No type for "${this.value}" (use Type.define to define it)`);
                 }
 
                 this.type = type.name;
@@ -188,7 +188,74 @@ class Value extends Item {
 
         this.apply(data, value);
     }
-    
+
+    /**
+     * Attempts to get this value in the parameter data object based on the given value.
+     * @param {Object} data The parameter data object.
+     * @param {*} value The new value to add `data`.
+     * @return {0/1/2/3} One of the following values:
+     *     0 - The value was set successfully
+     *     1 - Missing value
+     *     2 - Invalid value
+     *     3 - Value ignored
+     */
+    setRaw (data, value) {
+        var me = this;
+        var converted = me.convert(value);
+        var name = me.name;
+        var ret = 0;
+
+        if (converted === null) {
+            // If we have no (convertible) value, see if we can default something
+            // for it...
+            if (me.type === 'boolean') {
+                // "--foo" toggles booleans if no value is provided
+
+                if (name in data) {
+                    converted = !data[name];
+                }
+                else if ('value' in me) {
+                    converted = !me.value;
+                }
+                else {
+                    // No value to toggle...
+                    return 1;
+                }
+
+                ret = 3;
+            }
+            else if (me.type === 'number') {
+                if (name in data) {
+                    converted = data[name] + 1;
+                }
+                else if ('value' in me) {
+                    converted = me.value + 1;
+                }
+                else if (value !== null) {
+                    // If we cannot adjust but did have a value then the value is not
+                    // missing but invalid.
+                    return 2;
+                } else {
+                    // No value to adjust...
+                    return 1;
+                }
+
+                ret = 3;
+            }
+            else if (value !== null) {
+                // If we cannot convert but did have a value then the value is not
+                // missing but invalid.
+                return 2;
+            }
+            else {
+                return 1;
+            }
+        }
+
+        me.set(data, converted);
+        return ret;
+    }
+
     verify () {
         var type = this.typeOf;
 

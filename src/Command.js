@@ -58,68 +58,43 @@ class Command extends Cmdlet {
         return this.constructor.parameters;
     }
 
-    configure (args) {
-        super.configure(args);
+    applyDefaults (params) {
+        super.applyDefaults(params);
 
-        this.parameters.setDefaults(this.params);
+        this.parameters.applyDefaults(params);
     }
 
-    dispatch (args) {
-        var me = this;
+    processArg (arg, args) {
+        let param = this.parameters.at(this._paramPos);
 
-        return new Promise(function(resolve, reject) {
-            try {
-                me.configure(args);
-                me.validate(me.params);
-                let r = me.execute(me.params, args);
-                args.ownerPop(me);
-                resolve(r);
-            } catch (ex) {
-                args.ownerPop(me);
-                reject(ex);
-            }
-        });
-    }
-
-    processArg (args, arg) {
-        if (super.processArg(args, arg)) {
-            return true;
+        if (!param) {
+            // We've run out of parameters so let the base class take over...
+            return super.processArg(arg, args);
         }
 
-        return this.processParam(args, arg);
-    }
-
-    processParam (args, arg) {
-        let pos = this._paramPos;
-        let parameters = this.parameters.items;
-
-        if (pos >= parameters.length) {
-            return false;
-        }
-
-        let param = parameters[pos];
         let value = param.convert(arg);
 
         if (value === null) {
-            // Cannot accept this value for this parameter
-            if (param.required) {
-                this.raise(`Invalid value for "${param.name}": "${arg}" (expected ${param.type})`);
+            if (param.required && !(param.name in this.params)) {
+                this.raise(`Invalid value for "${param.name}" (expected ${param.type}): "${arg}"`);
             }
 
-            // Since this param is optional, skip to the next candidate and
-            // try it (this is the only way to advance past a vargs param):
+            // Since this param is optional or we have at least one valid argument
+            // for it, skip to the next candidate and try it (this is the only way to
+            // advance past a vargs param):
             ++this._paramPos;
-            return this.processParam(args, arg);
+            args.unpull(arg);
+        }
+        else {
+            param.set(this.params, value);
+
+            // We'll park on a vargs parameter until we hit an non-parsable arg...
+            if (!param.vargs) {
+                ++this._paramPos;
+            }
         }
 
-        param.set(this.params, value);
-
-        if (!param.vargs) {
-            ++this._paramPos;
-        }
-
-        // if the param is a vargs, keep accepting valid values for it...
-        return true;
+        return this.configure(args);
     }
 
     validate (params) {

@@ -1,95 +1,48 @@
-"use strict";
+'use strict';
 
 const ResponseFile = require('./ResponseFile');
 
-const andRe = /and/i;
-const thenRe = /then/i;
-const andOrThenRe = /and|then/i;
-const expandRe = /^@(.+)/;
-
-/**
- * This class manages the String[] of arguments to be dispatched by Cmdlets. It tracks
- * the current position of provides many helper methods to simplify the code processing
- * each argument.
- *
- * Instances of this class are owned by the `Cmdlet` dispatch mechanism. The `owner`
- * property will return the currently executing `Cmdlet`.
- */
 class Arguments {
     constructor (args) {
-        this._args = args;
+        this._args = [];
         this._index = 0;
         this._owners = [];
-        this._responseFileLoader = new ResponseFile();
-    }
+        this._unpulls = [];
 
-    get length () {
-        return this._args.length - this._index;
+        this.loader = new ResponseFile();
+
+        for (let a of args) {
+            a = String(a);  // only strings
+            if (a) {
+                this._args.push(a);  // but no empty strings...
+            }
+        }
     }
 
     get owner () {
-        var owners = this._owners,
-            n = owners.length;
+        var owners = this._owners;
 
-        return n ? owners[n - 1] : null;
+        return owners[owners.length - 1] || null;
     }
 
-    get total () {
-        return this._args.length;
-    }
-
-    * [Symbol.iterator] () {
-        for (var i = 0; i < this.length; ++i) {
-            yield this.at(i);
-        }
-    }
-
-    advance (n = 1) {
-        this._index = Math.max(0, Math.min(this._index + n, this._args.length));
-    }
-
-    at (offset = 0) {
-        var i = this._index + offset,
-            a = this._args,
-            s = null;
-
-        if (i < a.length) {
-            s = this._get(i);
-        }
-
-        return s;
-    }
-    
-    atAnd () {
-        var s = this.peek();
-        return andRe.test(s);
-    }
-
-    atConjunction () {
-        var s = this.peek();
-        return andOrThenRe.test(s);
-    }
-    
     atEnd () {
-        return this._index === this._args.length;
+        return !this.more();
     }
 
-    atThen () {
-        var s = this.peek();
-        return thenRe.test(s);
+    isAnd (s) {
+        return this.andRe.test(s);
+    }
+
+    isConjunction (s) {
+        return this.conjunctionRe.test(s);
+    }
+
+    isThen (s) {
+        return this.thenRe.test(s);
     }
 
     more () {
-        var s = this.peek();
-        return s && !andOrThenRe.test(s);
-    }
-
-    mustPull (message) {
-        var s = this.pull();
-        if (!s) {
-            throw new Error(message || 'Missing required argument');
-        }
-        return s;
+        return this._unpulls.length > 0 || this._index < this._args.length;
     }
 
     ownerPop (owner) {
@@ -106,93 +59,56 @@ class Arguments {
         owner.args = this;
     }
 
-    peek () {
-        return this.at();
-    }
-
     pull () {
-        var ret = this.at();
+        const me = this;
+        var a = me._unpulls;
 
-        this.advance();
+        if (a.length) {
+            // Items in our unpulls queue have already been parsed and should not be
+            // reprocessed (since "@@foo" becomes "@foo" as an arg).
+            return Promise.resolve(a.shift());
+        }
 
-        return ret;
+        a = me._args;
+        let index = me._index;
+
+        if (index < a.length) {
+            let promise = me.loader.expand(a[index]);
+
+            if (promise.fileName) {
+                // If the loader needs to load a response file, we need to get in
+                // the middle to replace the original argument.
+                return promise.then(lines => {
+                    me._replaceResponseFileArg(index, lines);
+
+                    return me.pull();
+                });
+            }
+
+            // Indicate that we've extracted this arg...
+            ++me._index;
+            return promise;
+        }
+
+        // We always return a promise, even at END. This is because we could hit a
+        // condition like this:
+        //
+        //      foo @bar.txt
+        //
+        // But "bar.txt" is an empty file. So no arguments replace the one we started
+        // processing with a promise. So the caller would have to handle
+        //
+        return Promise.resolve(null);
     }
 
-    pullConjunction (both) {
-        if (both) {
-            if (!this.atConjunction()) {
-                return false;
-            }
+    unpull (arg) {
+        let q = this._unpulls;
 
-            // In some cases (like template expansion of arguments) it is easy to get
-            // "and and" or "then and" etc. together so we consume redundant conjunctions
-            // here.
-            while (this.atConjunction()) {
-                this.advance();
-            }
+        if (Array.isArray(arg)) {
+            q.unshift(...arg);
         } else {
-            if (!this.atAnd()) {
-                return false;
-            }
-
-            // Consume redundant "and" conjunctions...
-            while (this.atAnd()) {
-                this.advance();
-            }
-
-            // Make sure we don't bump into a "then" after all...
-            if (this.atThen()) {
-                return false;
-            }
+            q.unshift(arg);
         }
-
-        return true;
-    }
-
-    rewind () {
-        this._index = 0;
-    }
-    
-    unpull () {
-        if (!this._index) {
-            throw new Error('No arguments to unpull');
-        }
-        
-        --this._index;
-    }
-
-    //---------------------------------------------------------
-    // Private
-
-    _get (index) {
-        var args = this._args;
-        var arg = args[index];
-
-        if (typeof arg === 'string') {
-            var m = expandRe.exec(arg);
-
-            // handle @@foo to mean literal @foo
-            if (m && (arg = m[1])[0] !== '@') {
-                // We call out to allow user to hook into the processing of the
-                // response file.
-                let lines = this._readResponseFile(arg, index);
-                this._replaceResponseFileArg(index, lines);
-
-                arg = this._get(index);  // recurse
-            }
-            else {
-                args[index] = [arg];
-            }
-        }
-        else {
-            arg = arg[0];
-        }
-
-        return arg;
-    }
-
-    _readResponseFile (filename) {
-        return this._responseFileLoader.read(filename);
     }
 
     _replaceResponseFileArg (index, lines) {
@@ -200,6 +116,10 @@ class Arguments {
     }
 }
 
-Arguments.prototype.isArguments = true;
+Object.assign(Arguments.prototype, {
+    andRe: /and/i,
+    thenRe: /then/i,
+    conjunctionRe: /and|then/i
+});
 
 module.exports = Arguments;

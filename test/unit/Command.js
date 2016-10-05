@@ -98,6 +98,24 @@ describe('Command', function() {
         expect(abcParam.value).to.equal('xyz');
     });
 
+    it('should throw an exception if an alias is defined on a parameter', function (done) {
+        class Foo extends Command {}
+        try {
+            Foo.define({
+                parameters: {
+                    bar: {
+                        type: 'boolean'
+                    },
+                    baz: 'bar'
+                }
+            });
+            expect().fail();
+        } catch (ex) {
+            expect(ex.message).to.equal('Can only apply aliases to commands: "baz" = "bar"');
+            done();
+        }
+    });
+
     it('should allow the definition of user-defined aspects', function () {
         class Foo extends Command {}
 
@@ -139,6 +157,56 @@ describe('Command', function() {
 
         Util.rejects(done, 'Missing required switch "bar"',
             new Foo().run([]));
+    });
+
+    it('should not allow switches with duplicate names', function (done) {
+        class Foo extends Command {}
+        try {
+            Foo.define({
+                switches: 'bar:string bar:number'
+            });
+            expect().fail();
+        } catch (ex) {
+            expect(ex.message).to.equal('Duplicate switch "bar"');
+            done();
+        }
+    });
+
+    it('should allow switches to be defined from parameters', function (done) {
+        class Foo extends Command {
+            execute (parameters) {
+                expect(parameters.bar).to.eql(1);
+                expect(parameters.baz).to.equal('abc');
+
+                return `${parameters.baz} ${parameters.bar}`;
+            }
+        }
+
+        Foo.define({
+            parameters: 'baz [{bar:number}]'
+        });
+
+        Util.resolves(done, 'abc 1',
+            new Foo().run('--bar=1', 'abc'));
+    });
+
+    it('should not allow switches to be defined from parameters if a switch with that name already exists', function (done) {
+        class Foo extends Command {}
+
+        try{
+            Foo.define({
+                switches: {
+                    bar: {
+                        type: 'string'
+                    }
+                },
+                parameters: '[{bar:number}]'
+            });
+            expect().fail();
+        } catch (ex) {
+            expect(ex.message).to.equal('Parameter bar already defined as a switch');
+            done();
+        }
     });
 
     it('should reject the promise if a required parameter is not present', function (done) {
@@ -250,8 +318,10 @@ describe('Command', function() {
             parameters: 'bar:number'
         });
 
-        Util.rejects(done, 'Invalid value for "bar": "baz" (expected number)',
-            new Foo().run(['baz']));
+        var foo = new Foo();
+
+        Util.rejects(done, 'Invalid value for "bar" (expected number): "baz"',
+            foo.run('baz'));
     });
 
     it('switch with default boolean parameter', function (done) {
@@ -318,7 +388,7 @@ describe('Command', function() {
         class Foo extends Command {
             execute (parameters) {
                 expect(parameters.debug).to.equal(true);
-                expect(parameters.foo).to.equal('foo');
+                expect(parameters.foo).to.equal('foobar');
 
                 return parameters.foo;
             }
@@ -333,8 +403,10 @@ describe('Command', function() {
             }
         });
 
-        Util.resolves(done, 'foo',
-            new Foo().run('--debug', 'foo'));
+        var foo = new Foo();
+
+        Util.resolves(done, 'foobar',
+            foo.run('--debug', 'foobar'));
     });
 
     it('switch with default number supplied', function (done) {

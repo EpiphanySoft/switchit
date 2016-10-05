@@ -72,13 +72,15 @@ class Help extends Command {
             let containers = [];
             let commands = [];
             let syntaxTokenParts = [];
-            let defaultCmd;
+
             target.commands.items.forEach(function (cmdlet) {
-                if (cmdlet.type.isContainer) {
-                    containers.push(cmdlet);
-                }
-                else if (cmdlet.type.isCommand) {
-                    commands.push(cmdlet);
+                if (cmdlet.name) {
+                    if (cmdlet.type.isContainer) {
+                        containers.push(cmdlet);
+                    }
+                    else if (cmdlet.type.isCommand) {
+                        commands.push(cmdlet);
+                    }
                 }
             });
 
@@ -97,23 +99,17 @@ class Help extends Command {
                 out.push('');
                 out.push('Available sub-commands:');
                 commands.forEach(function (command) {
-                    if (command.name === "default") {
-                        defaultCmd = command;
-                        if (defaultCmd.type.help) {
-                            syntax.unshift(`${fullName}\t${defaultCmd.type.help}\n  `);
-                        }
-                    }
-                    else {
-                        // Example:
-                        //  * help:       This command ...
-                        out.push(` * ${command.name}${command.type.help ? ':\t' + command.type.help + '\t' : ''}${command.aliases.length > 0 ? ' (or ' + command.aliases.join(', ') + ')': ''}`);
-                    }
+                    // Example:
+                    //  * help:       This command ...
+                    out.push(` * ${command.name}${command.type.help ? ':\t' + command.type.help + '\t' : ''}${command.aliases.length > 0 ? ' (or ' + command.aliases.join(', ') + ')': ''}`);
                 });
                 syntaxTokenParts.push('subcommand');
             }
 
             // This container has additional containers and/or commands, push the placeholder into the syntax string
-            syntax.push(`${defaultCmd ? '(' : '[' }${syntaxTokenParts.join('|')}${defaultCmd ? ')\tExecute subcommand' : ']' }`);
+            if (syntaxTokenParts.length) {
+                syntax.push(`[${syntaxTokenParts.join('|')}]`);
+            }
         }
 
         if (target.isCommand && target.parameters && target.parameters.items.length > 0) {

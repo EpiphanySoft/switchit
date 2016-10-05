@@ -157,4 +157,77 @@ describe('Type', () => {
             expect(Type.string.convert(0)).to.be('0');
         });
     });
+
+    it('should provide a base convert method', function () {
+        expect(new Type().convert('foo')).to.equal('foo');
+    });
+
+    it('should allow defining custom types', function () {
+        Type.define({
+            default: 1,
+            name: 'oddNumber',
+
+            re: /^[13579]+$/i,
+
+            convert (value) {
+                var r = +value;
+                if (typeof value !== 'number') {
+                    let s = String(value);
+
+                    if (!this.re.test(s)) {
+                        return null;
+                    }
+                    r = parseInt(value);
+                }
+                if (parseInt(value) % 2 == 0) {
+                    return null;
+                }
+                return r;
+            },
+
+            is (value) {
+                return (parseInt(value) % 2 == 1);
+            }
+        });
+
+        let oddNumberType = Type.get('oddNumber');
+        expect(oddNumberType).to.be.ok();
+        expect(oddNumberType.is(3)).to.be.ok();
+    });
+
+    it('should throw an error if trying to define a duplicated type', function (done) {
+        try {
+            Type.define({
+                name: 'number'
+            });
+            expect().fail();
+        } catch (ex) {
+            expect(ex.message).to.equal('Type already defined: "number"');
+            done();
+        }
+    });
+
+    it('should provide a way to get the type for a given (directly or indirectly) known value type', function () {
+        expect(Type.of('foo').name).to.equal('string');
+        expect(Type.of(4).name).to.equal('number');
+        expect(Type.of(true).name).to.equal('boolean');
+
+        expect(Type.of(() => {}).name).to.equal('string'); // In this test, we're relying on functions being coerced by "string" type
+    });
+
+    it('should throw an error if trying to identify type when ambiguous types exists', function (done) {
+        try {
+            Type.of(3);
+            expect().fail();
+        } catch (ex) {
+            expect(ex.message).to.equal('Ambiguous type for "3"; could be: number, oddNumber');
+            done();
+        }
+    });
+
+    it('should return an array with matching names when trying to pick using a function and no value is passed', function () {
+        expect(Type.pick((def) => {
+            return def.is(3);
+        })).to.eql(['number', 'oddNumber']);
+    });
 });

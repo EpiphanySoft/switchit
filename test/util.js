@@ -161,7 +161,8 @@ class Util {
                     }
 
                     done();
-                } catch (e) {
+                }
+                catch (e) {
                     done(e);
                 }
             });

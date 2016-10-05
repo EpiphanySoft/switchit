@@ -3,6 +3,7 @@
 const Arguments = require('./Arguments');
 const Switches = require('./Switches');
 const Type = require('./Type');
+const Util = require('./Util');
 
 const paramRe = /^\-{1,2}([a-z_-][\w-]*)$/i;
 const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
@@ -178,9 +179,17 @@ class Cmdlet {
         
         return s + (this.name || this.constructor.title);
     }
-    
+
     get switches () {
         return this.constructor.switches;
+    }
+
+    applyDefaults (params) {
+        this.switches.applyDefaults(params);
+    }
+
+    atRoot () {
+        return !this.parent;
     }
 
     attach (parent, name) {
@@ -191,18 +200,58 @@ class Cmdlet {
     }
     
     configure (args) {
-        args.ownerPush(this);
+        const me = this;
+        var params = me.params,
+            switches = me.switches,
+            entry, match, val;
 
-        while (args.more()) {  // while (!atEnd && !atAnd && !atThen) {
-            let arg = args.pull();
-            
-            if (!this.processArg(args, arg)) {
-                args.unpull();
-                break;
+        return args.pull().then(arg => {
+            // While we have arguments, try to process them
+            if (arg !== null) {
+                match = plusParamRe.exec(arg);
+
+                if (match) {
+                    // +param
+                    val = true;
+                }
+                else if ((match = paramAssignRe.exec(arg))) {  // <== assignment
+                    // --param=value
+                    val = match[2];
+                }
+                else if ((match = paramRe.exec(arg))) {  // <== assignment
+                    // --param value
+                    entry = switches.lookup(match[1]);
+
+                    return args.pull().then(value => {
+                        let result = entry.setRaw(params, value);
+
+                        if (result === 1) { // Missing value
+                            me.raise(`Missing value for "${entry.name}" switch`);
+                        }
+                        if (result === 2) {  // Invalid value
+                            me.raise(`Invalid value for "${entry.name}" switch: "${value}"`);
+                        }
+
+                        if (result === 3) { // Ignored value
+                            args.unpull(value);
+                        }
+                        // else Success
+
+                        return me.configure(args);
+                    });
+                }
+                else {
+                    // Non-switch, check for other types of arguments (parameters)...
+                    return me.processArg(arg, args);
+                }
+
+                entry = switches.lookup(match[1]);
+
+                entry.setRaw(params, val);
+
+                return me.configure(args);
             }
-        }
-
-        this.switches.setDefaults(this.params);
+        });
     }
 
     destroy () {
@@ -217,6 +266,23 @@ class Cmdlet {
         }
     }
 
+    dispatch (args) {
+        var me = this;
+        var params = me.params;
+
+        args.ownerPush(me);
+
+        return Util.finally(me.configure(args).then(() => {
+            me.applyDefaults(params);
+            me.validate(params);
+
+            return me.execute(params, args);
+        }),
+        () => {
+            args.ownerPop(me);
+        });
+    }
+
     down (name) {
         var candidate = this.child;
         var is = (typeof name === 'function') ? name : (c => !name || c.name === name);
@@ -229,107 +295,15 @@ class Cmdlet {
     }
 
     leaf () {
-        return this.down(c => !c.child) || this;  // ||this since we may be the leaf
+        if (!this.child) {
+            return this;
+        }
+        return this.child.leaf();
     }
 
-    /**
-     * @method parseSwitch
-     * This method executes the commands described in the `Arguments` object. This method
-     * is typically called via the `run` method.
-     * @param {Arguments} args The `Arguments` instance containing the arguments to run.
-     * @param arg The current argumetn to parse the switch from
-     * @return {Array} A two element array containing the `Switch` instance ([0]) and the parsed value ([1]).
-     */
-
-    parseSwitch (args, arg) {
-        var params = this.params,
-            converted, entry, m, name, value;
-        
-        if (!(m = paramRe.exec(arg))) {
-            if (!(m = paramAssignRe.exec(arg))) {
-                if (!(m = plusParamRe.exec(arg))) {
-                    return null;
-                }
-                
-                // +param
-                return [this.switches.canonicalize(m[1]), true];
-            }
-
-            // --param=value
-            value = m[2];
-        }
-
-        name = this.switches.canonicalize(m[1]);
-        entry = this.switches.lookup(name);
-
-        if (value !== undefined) {
-            converted = entry.convert(value);
-        } else {
-            // --param value
-            value = args.peek();
-
-            converted = entry.convert(value);
-
-            if (converted !== null) {
-                // --bool true|false|...
-                // --number 42
-                args.advance();
-            }
-            else if (entry.type === 'boolean') {
-                // We allow "-foo" to toggle a boolean value if no value is provided
-
-                if (name in params) {
-                    converted = !params[name];
-                }
-                else if ('value' in entry) {
-                    converted = !entry.value;
-                }
-                else {
-                    // No value to toggle, so fail...
-                    args.mustPull();
-                }
-            }
-            else if (entry.type === 'number') {
-                if (name in params) {
-                    converted = params[name] + 1;
-                }
-                else if ('value' in entry) {
-                    converted = entry.value + 1;
-                }
-                else {
-                    // No value to toggle, so fail...
-                    args.mustPull();
-                }
-            }
-            else {
-                args.mustPull();
-            }
-        }
-
-        if (converted === null) {
-            this.raise(`Invalid value for "${name}": "${value}" (expected ${entry.type})`);
-        }
-
-        return [entry, converted];
-    }
-
-    processArg (args, arg) {
-        return this.processSwitch(args, arg);
-    }
-
-    processSwitch (args, arg) {
-        var parsed = this.parseSwitch(args, arg);
-        var params = this.params;
-
-        if (!parsed) {
-            return false;
-        }
-
-        // Delegate the act of putting the value into the params map over to the
-        // Switch instance.
-        parsed[0].set(params, parsed[1]);
-
-        return true;
+    processArg (arg, args) {
+        args.unpull(arg);
+        return null;
     }
 
     raise (msg) {
@@ -340,7 +314,11 @@ class Cmdlet {
     }
 
     root () {
-        return this.up(p => !p.parent) || this;  // ||this since we may be the root
+        if (!this.parent) {
+            return this;
+        }
+
+        return this.parent.root();
     }
 
     /**

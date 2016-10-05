@@ -123,23 +123,38 @@ class Items {
     alias (alias, actualName) {
         throw new Error(`Can only apply aliases to commands: "${alias}" = "${actualName}"`);
     }
-    
-    canonicalize (name) {
-        var entry = this.lookup(name);
 
-        if (!entry) {
-            throw new Error(`${name} matches no ${this.kinds} for ${this.owner.title}`);
-            // "bar" matches no switches for "git commit"
-            // "foo" matches no commands for "git"
+    /**
+     * This method applies default values for missing parameters.
+     * @param {Object} params The parameter data object.
+     */
+    applyDefaults (params) {
+        for (let item of this.items) {
+            if (item.optional && !(item.name in params)) {
+                if ('value' in item) {
+                    item.set(params, item.value);
+                }
+                else if (item.vargs) {
+                    // For optional vargs parameters, drop an empty array in the params
+                    // to avoid NPEs (like a rest operator).
+                    params[item.name] = [];
+                }
+                // else we could put the default value for item.type but that would be
+                // hard to distinguish from non-supplied parameters (set item.value if
+                // that is preferred).
+            }
         }
+    }
 
-        return entry.name;
+    at (index) {
+        return this.items[index] || null;
     }
 
     canAdd (item) {
         let name = item.name;
 
-        if (this.map[name] || this.map[item.loname]) {
+        // Allow derived classes to overwrite inherited items
+        if (this.map.hasOwnProperty(name) || this.map.hasOwnProperty(item.loname)) {
             throw new Error(`Duplicate ${this.kind} "${name}"`);
         }
     }
@@ -194,28 +209,6 @@ class Items {
         }
 
         return ret || null;
-    }
-
-    /**
-     * This method applies default values for missing parameters.
-     * @param {Object} params The parameter data object.
-     */
-    setDefaults (params) {
-        for (let item of this.items) {
-            if (item.optional && !(item.name in params)) {
-                if ('value' in item) {
-                    item.set(params, item.value);
-                }
-                else if (item.vargs) {
-                    // For optional vargs parameters, drop an empty array in the params
-                    // to avoid NPEs (like a rest operator).
-                    params[item.name] = [];
-                }
-                // else we could put the default value for item.type but that would be
-                // hard to distinguish from non-supplied parameters (set item.value if
-                // that is preferred).
-            }
-        }
     }
 
     /**

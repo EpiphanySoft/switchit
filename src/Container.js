@@ -2,6 +2,7 @@
 
 const Cmdlet = require('./Cmdlet');
 const Commands = require('./Commands');
+const Util = require('./Util');
 
 const Help = require('./Help');
 
@@ -26,68 +27,79 @@ class Container extends Cmdlet {
         return this.constructor.commands;
     }
 
-    dispatch (args) {
+    execute (params, args) {
         var me = this;
 
-        return new Promise((resolve, reject) => {
-            me.configure(args);
-            me.validate(me.params);
-            let arg = args.pull();
+        return args.pull().then(arg => {
+            let counter = me._counter;  // 0 the first time in...
 
-            if (!arg) {
-                let defaultCmd = me.commands.get(''),
-                    defaultCmdName;
+            if (arg) {
+                // After any command has run, the only valid tokens that
+                // should follow are "and" or "then". Unless this is the
+                // root container, in which case we allow commands to be
+                // run in an list:
+                //
+                //      cmd foo bar baz
+                //
+                // If "foo", "bar" and "baz" are all top-level commands,
+                // this is better then requiring:
+                //
+                //      cmd foo and bar and baz
 
-                if (defaultCmd) {
-                    defaultCmdName = defaultCmd.name;
-                    defaultCmd = defaultCmd.type;
+                if (args.isConjunction(arg)) {
+                    // When we hit "then" conjunctions and we are not the root
+                    // container, put it back and drop out...
+                    if (args.isThen(arg) && !me.atRoot()) {
+                        args.unpull(arg);  // put "then" back for root to get
+                        return me._result;
+                    }
+
+                    // Mark it as ok to dispatch another command now that we've
+                    // hit a conjunction (only root is allowed to do so w/o a
+                    // conjunction).
+                    me._done = false;
+
+                    // Otherwise skip over it and go again on this container...
+                    return me.execute(params, args);
                 }
-                else {
-                    defaultCmdName = 'help';
-                    defaultCmd = Help;
+
+                if (counter && me._done) {
+                    // We've pulled a non-conjunction (and as a non-root we are
+                    // not allowed to do chaining w/o conjunctions), so fail.
+                    throw new Error(`Invalid command "${arg}" following "${me.fullName}"`);
                 }
-
-                let cmd = new defaultCmd().attach(me, defaultCmdName);
-
-                cmd.dispatch(args).then(v => {
-                    args.ownerPop(me);
-                    resolve(v);
-                },
-                e => {
-                    args.ownerPop(me);
-                    reject(e);
-                });
-
-                return;
             }
+            else if (counter) {
+                // We've run out of arguments, so we're done if we've run any
+                // commands from this container...
+                return me._result;
+            }
+            else {
+                // This is the first dip into this container and we've got no
+                // more arguments, so delegate on to the default command (help
+                // by default).
+                arg = '';
+            }
+
+            ++me._counter;
+            me._done = !me.atRoot();
 
             let entry = me.commands.lookup(arg);
 
             if (!entry) {
-                args.ownerPop(me);
-                reject(new Error(`No such command or category "${arg}"`)); //TODO full cmd path
-                return;
+                throw new Error(`No such command or category "${me.fullName} ${arg}"`);
             }
 
             let cmd = entry.create(me);
 
-            cmd.dispatch(args).then(v => {
+            return Util.finally(cmd.dispatch(args), () => {
                 cmd.destroy();
-                args.ownerPop(me);
+            }).then(v => {
+                me._result = v;
 
-                if (args.pullConjunction(!me.parent) && !args.atEnd()) {
-                    // If this command ended with an appropriate conjunction ("and" or
-                    // "then" keyword) and there are more arguments to process, call
-                    // back to our dispatch() method to go around again.
-                    resolve(me.dispatch(args));
-                } else {
-                    resolve(v);
-                }
-            },
-            err => {
-                cmd.destroy();
-                args.ownerPop(me);
-                reject(err);
+                // Loop back on ourselves. We check for *and* and *then* at the
+                // front of this method.
+                return me.dispatch(args);
             });
         });
     }
@@ -100,7 +112,17 @@ Object.assign(Container, {
 });
 
 Object.assign(Container.prototype, {
-    isContainer: true
+    isContainer: true,
+    _counter: 0,
+    _done: false,
+    _result: null
+});
+
+// Establish "Help" as the (default) default command.
+Container.define({
+    commands: {
+        '': Help
+    }
 });
 
 module.exports = Container;
