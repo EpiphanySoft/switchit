@@ -21,6 +21,37 @@ class Container extends Cmdlet {
         return Commands.get(this);
     }
 
+    static getAspects (includePrivate = true) {
+        let defaultCmd = null,
+            aspectMap = Object.assign(super.getAspects(), {
+            commands: this.commands.items.map((cmd) => {
+                if (cmd.type === Help && !includePrivate) {
+                    return;
+                }
+                if (!cmd.private || includePrivate) {
+                    if (cmd.name === '') {
+                        defaultCmd = cmd;
+                    } else {
+                        if (cmd.aliases.indexOf('') > -1) {
+                            defaultCmd = cmd;
+                        }
+                        return Object.assign({
+                            aliases: cmd.aliases,
+                            name: cmd.name
+                        }, cmd.type.getAspects());
+                    }
+                }
+            }),
+            container: true
+        });
+
+        if (defaultCmd !== null) {
+            aspectMap.defaultCmd = defaultCmd.type.getAspects();
+        }
+
+        return aspectMap;
+    }
+
     //-----------------------------------------------------------
 
     get commands () {

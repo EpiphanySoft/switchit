@@ -469,7 +469,7 @@ describe('Container', function() {
     });
 
     describe('Help', function () {
-        it('should display main help message if no arguments are passed', function (done) {
+        it('should define Help as default command', function (done) {
             class Foo extends Container {
             }
 
@@ -478,7 +478,7 @@ describe('Container', function() {
             Util.resolves(done, Util.capturesStdout(() => {
                 return foo.run([]);
             }).then(out => {
-                expect(out).to.equal(' \n Foo\n \n Syntax:\n   foo\n');
+                expect(out).to.contain('Syntax\n  foo [command]');
             }));
         });
     });

@@ -164,6 +164,16 @@ class Cmdlet {
     static set title (v) {
         this._title = v;
     }
+
+    static getAspects (includePrivate = false) {
+        return {
+            switches: this.switches.items.map((s) => {
+                if (!s.private || includePrivate) return s;
+            }),
+            title: this.title,
+            help: this.help
+        }
+    }
     
     //-----------------------------------------------------------
 

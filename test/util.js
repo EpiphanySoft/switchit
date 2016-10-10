@@ -15,26 +15,25 @@ class Util {
             Util.stdoutHook = null;
         }
 
-        //console.log('>>> Hooking stdout');
         var oldWrite = stream.write;
         var buf = '';
-        stream.write = function(chunk, encoding, callback){
-            buf += chunk.toString();
+        stream.write = function(chunk){
+            buf += chunk.toString().trim();
             //oldWrite.apply(stream, arguments); // Uncomment to log to the console as well as capture to the buffer
         };
 
         return Util.stdoutHook = {
             unhook: function unhook(){
                 stream.write = oldWrite;
-                //console.log('>>> Unhooking stdout');
             },
-            captured: function(){
-                return stripAnsi(buf);
+            captured: function(strip = true, trimAllLines = false) {
+                var ret = strip ? stripAnsi(buf) : buf;
+                return trimAllLines ? ret.split('\n').map((l) => l.trim()).join('\n') : ret;
             }
         };
     }
 
-    static capturesStdout (fn) {
+    static capturesStdout (fn, stripAnsi) {
         Util.captureStream(process.stdout);
 
         var promise = new Promise(function (resolve, reject) {
@@ -47,20 +46,20 @@ class Util {
         });
 
         return promise.then(() => {
-            return Util.endCapture();
+            return Util.endCapture(stripAnsi);
         },
         e => {
-            Util.endCapture();
+            Util.endCapture(stripAnsi);
             throw e;
         });
     }
 
-    static endCapture () {
+    static endCapture (stripAnsi) {
         var hook = Util.stdoutHook;
         var output;
         
         if (hook) {
-            output = hook.captured() || '';
+            output = hook.captured(stripAnsi) || '';
             hook.unhook();
             Util.stdoutHook = null;
         }
@@ -166,6 +165,10 @@ class Util {
                     done(e);
                 }
             });
+    }
+
+    static getFileContents (path) {
+        return fs.readFileSync(path, 'UTF-8');
     }
 }
 

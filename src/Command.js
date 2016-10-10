@@ -45,6 +45,15 @@ class Command extends Cmdlet {
         return Parameters.get(this);
     }
 
+    static getAspects (includePrivate = true) {
+        return Object.assign(super.getAspects(), {
+            command: true,
+            parameters: this.parameters.items.map((p) => {
+                if (!p.private || includePrivate) return p;
+            })
+        });
+    }
+
     //-----------------------------------------------------------
 
     constructor () {
