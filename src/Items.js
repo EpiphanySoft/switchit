@@ -88,7 +88,7 @@ class Items {
 
     addAll (all) {
         if (typeof all === 'string') {
-            all = all.split(' ');
+            all = all.trim().split(/\s+/);
 
             all.forEach(part => this.add(part));
         }
