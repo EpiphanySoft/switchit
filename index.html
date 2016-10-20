@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="description" content="Switchit : Command-line Switch and Dispatcher Framework">
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Switchit</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/dongryphon/switchit">View on GitHub</a>
+
+          <h1 id="project_title">Switchit</h1>
+          <h2 id="project_tagline">Command-line Switch and Dispatcher Framework</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/dongryphon/switchit/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/dongryphon/switchit/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <p><img src="assets/switchit_logo.png" alt="switchit logo">  </p>
+
+<p><a href="https://travis-ci.org/dongryphon/switchit"><img src="https://travis-ci.org/dongryphon/switchit.svg?branch=master" alt="Build Status"></a>
+<a href="https://coveralls.io/github/dongryphon/switchit?branch=master"><img src="https://coveralls.io/repos/github/dongryphon/switchit/badge.svg?branch=master" alt="Coverage Status"></a>
+<a href="https://david-dm.org/dongryphon/switchit"><img src="https://david-dm.org/dongryphon/switchit/status.svg" alt="Dependencies Status"></a>
+<a href="https://badge.fury.io/js/switchit"><img src="https://badge.fury.io/js/switchit.svg" alt="npm version"></a>
+<a href="https://opensource.org/licenses/mit-license.php"><img src="https://badges.frapsoft.com/os/mit/mit.svg?v=103" alt="MIT Licence"></a>   </p>
+
+<h1>
+<a id="switchit" class="anchor" href="#switchit" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>switchit</h1>
+
+<p>A no-nonsense framework for command-line switch parsing and command dispatching.</p>
+
+<p><code>switchit</code> enables you to write modern command-line applications using a straightforward API and features <em>including</em>:</p>
+
+<ul>
+<li>[x] <a href="#getting-started">Robust command definition using a simple object-oriented API</a> </li>
+<li>[x] <a href="#support-for-positional-arguments">Effortless switch and positional argument parsing</a> </li>
+<li>[x] <a href="#promises-we-ve-got-those-too">Promise based command dispatching</a> </li>
+<li>[x] <a href="#interactive-prompt-for-missing-values">Interactive prompt for missing values</a>
+</li>
+<li>[x] <a href="docs/Features.md#required-and-optional-switches-and-parameters">Required and optional switches and parameters</a> </li>
+<li>[x] <a href="docs/Features.md#variadic-switches-and-parameters">Variadic switches and parameters</a> </li>
+<li>[x] <a href="docs/Features.md#nested-command-hierarchy">Nested command hierarchy (like <code>git remote add {args}</code>)</a> </li>
+<li>[x] <a href="docs/Features.md#advanced-command-chaining">Advanced command chaining using <code>and</code> and <code>then</code></a> </li>
+<li>[x] <a href="docs/Features.md#shortest-unique-prefix-for-sub-commands-and-switches">Dispatching via shortest unique prefix for sub-commands and switches</a> </li>
+<li>[x] <a href="docs/Features.md#custom-aliases-and-default-sub-command">Custom command aliases and default sub-command</a> </li>
+<li>[x] <a href="docs/Features.md#response-file-processing">Complex command invocation using response files</a> </li>
+<li>[x] <a href="docs/Features.md#built-in-help">Comprehensive built-in help command</a> </li>
+</ul>
+
+<p>There are so many features and functionality to describe that they got <a href="docs/Features.md">its own document</a> 
+just to outline them all!</p>
+
+<h2>
+<a id="getting-started" class="anchor" href="#getting-started" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Getting Started</h2>
+
+<p><strong>Quick Start</strong></p>
+
+<p>Install <code>switchit</code> into your project:</p>
+
+<pre><code>$ npm install switchit --save
+</code></pre>
+
+<p>Create a <code>.js</code> file and add the following:</p>
+
+<pre><code>const Command = require('switchit').Command;
+
+class SayHi extends Command {
+    execute (params) {
+        console.log(`Hi, ${params.name}!`);
+    }
+}
+
+SayHi.define({
+    switches: 'name'
+});
+
+new SayHi().run();
+</code></pre>
+
+<p>Run your project file, don't forget to pass <code>--name</code>:</p>
+
+<pre><code>$ node examples/sayhi.js --name John
+Hi, John!
+</code></pre>
+
+<h3>
+<a id="support-for-positional-arguments" class="anchor" href="#support-for-positional-arguments" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Support for positional arguments</h3>
+
+<p>You can also accept positional arguments as parameters in your command: </p>
+
+<pre><code>...
+
+SayHi.define({
+    parameters: 'name'  // changed this from "switches" to "parameters"
+});
+
+...
+</code></pre>
+
+<p>Look ma, no switches!</p>
+
+<pre><code>$ node examples/parameter.js Paul
+Hi, Paul!
+</code></pre>
+
+<p>Do you want to read a parameter form either positional arguments or switches? 
+<a href="docs/Features.md#Switchy-params"><code>switchit</code> supports it too!</a> </p>
+
+<h3>
+<a id="promises-switchit-has-those-too" class="anchor" href="#promises-switchit-has-those-too" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Promises? <code>switchit</code> has those too!</h3>
+
+<p>The <code>.run()</code> method returns a promise! </p>
+
+<pre><code>...
+
+new SayHi().run().then(() =&gt; { 
+    console.log("Success!"); 
+},(e) =&gt; { 
+    console.error(`Oh no! ${e.message}`) 
+});
+</code></pre>
+
+<p>Check it out:</p>
+
+<pre><code>$ node examples/promise.js
+Oh no! Missing value for parameter: "name"
+$ node examples/promise.js George 
+Hi, George!
+Success!
+</code></pre>
+
+<h3>
+<a id="interactive-prompt-for-missing-values" class="anchor" href="#interactive-prompt-for-missing-values" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Interactive prompt for missing values</h3>
+
+<p>Wanna see somethiing awesome? Just add <code>interactive: true</code> to your command definition:</p>
+
+<pre><code>....
+
+SayHi.define({
+    parameters: 'name',
+    interactive: true,
+    // Optionally add some help texts to improve the UI
+    //  more info at docs/Features.md#built-in-help
+    help: {
+        '': 'This is a command that says hi!',
+        'name': 'Your name'
+    }
+});
+
+...
+</code></pre>
+
+<p>Run it with no arguments to see it in action:</p>
+
+<pre><code>$ node interactive.js
+This is a command that says hi!
+Press ^C at any time to quit.
+
+Your name
+? name: 
+</code></pre>
+
+<p>Check <a href="docs/Features.md#Interactive-prompt-on-missing-values">docs/Interactive.md</a> for more information
+on how to take advantage of this feature.</p>
+
+<h2>
+<a id="more-examples-and-api" class="anchor" href="#more-examples-and-api" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>More examples and API</h2>
+
+<p>Once you get the hang of the examples above, make sure to check our <a href="examples/">examples</a>
+directory or our complete <a href="docs/">docs</a> for more information and API docs.</p>
+
+<h2>
+<a id="contributing" class="anchor" href="#contributing" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Contributing</h2>
+
+<p>Please read <a href="CONTRIBUTING.md">CONTRIBUTING.md</a> for details on the code of conduct, and the
+process for submitting pull requests.</p>
+
+<h2>
+<a id="versioning" class="anchor" href="#versioning" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Versioning</h2>
+
+<p><code>switchit</code> uses <a href="http://semver.org/">SemVer</a> for versioning. For the versions available, see the
+<a href="https://github.com/dongryphon/switchit/tags">tags on this repository</a>. </p>
+
+<h2>
+<a id="authors" class="anchor" href="#authors" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>Authors</h2>
+
+<ul>
+<li>
+<strong>Don Griffin</strong> - <em>Author</em> - <a href="https://github.com/dongryphon">dongryphon</a>
+</li>
+</ul>
+
+<p>See also the list of <a href="https://github.com/dongryphon/switchit/contributors">contributors</a>
+who participated in this project.</p>
+
+<h2>
+<a id="license" class="anchor" href="#license" aria-hidden="true"><span aria-hidden="true" class="octicon octicon-link"></span></a>License</h2>
+
+<p>This project is licensed under the MIT License - see the <a href="LICENSE">LICENSE</a> file for details</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Switchit maintained by <a href="https://github.com/dongryphon">dongryphon</a></p>
+        <p>Published with <a href="https://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
