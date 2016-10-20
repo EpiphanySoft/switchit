@@ -6,28 +6,25 @@ This command attempts to implement a mock version of `git` to demonstrate how it
 * [x] Nested command hierarchy (Available command containers: `remote`, `submodule`. See [`index.js`](index.js))
 * [x] Custom aliases (Try running `node git.js ?`)
 * [x] Default container sub-command (Try running `node git.js remote`, see [`remote/index.js`](remote/index.js))
-* [x] Built-in help
+* [x] Built-in `help` command
 
 ## How to run this example
 
 Use [`../git.js`](../git.js):
 
     $ node git.js  
+     Git: the simple content tracker
+     Syntax
+       git [command]           Executes a command
      
-     Git: the stupid content tracker
+     Available commands (»: has sub-commands):
+       · commit                  Commits current changes
+       · fetch                   Fetches changes from a remote
+       · pull                    Pulls changes from a remote branch
+       · remote »                Commands to manage remote references
+       · submodule »             Initialize, update or inspect submodules
      
-     Available command containers:
-      * remote:     Commands to manage remote references    
-      * submodule:  Initialize, update or inspect submodules        
-     
-     Available sub-commands:
-      * help:       This command displays help for other commands   (alias: ?)
-      * commit:     Commits current changes 
-      * fetch:      Fetches changes from a remote   
-      * pull:       Pulls changes from a remote branch      
-     
-     Syntax:
-       git [container|subcommand]
+     Run git Help [command] for more information on a command.
         
 ## How it works
 
@@ -43,7 +40,8 @@ Use [`../git.js`](../git.js):
         process.exit(1);
     });
 
-The `Git` class (located at [`index.js`](index.js)) requires all available commands and categories as well as the built-in Help command, then defines itself as a subclass of `Container`.
+The `Git` class (located at [`index.js`](index.js)) requires all available commands as well as the built-in Help command,
+then defines itself as a subclass of `Container`.
 
     const {
         Container,
@@ -61,19 +59,15 @@ The `Git` class (located at [`index.js`](index.js)) requires all available comma
     
     Git.define({
         title: 'git',
-        help: 'the stupid content tracker',
+        help: 'the simple content tracker',
         commands: {
             '?': 'help',
-    
             help: Help,
             commit: Commit,
-            fetch: {
-                type: Fetch
-            },
-            pull: {
-                type: Pull
-            },
-            remote: Remote
+            fetch: Fetch,
+            pull: Pull,
+            remote: Remote,
+            submodule: Submodule
         }
     });
     

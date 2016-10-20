@@ -9,24 +9,17 @@ const Pull = require('./pull');
 const Remote = require('./remote');
 const Submodule = require('./submodule');
 
-class Git extends Container {
-    //
-}
+class Git extends Container {}
 
 Git.define({
     title: 'git',
-    help: 'the stupid content tracker',
+    help: 'the simple content tracker',
     commands: {
         '?': 'help',
-
         help: Help,
         commit: Commit,
-        fetch: {
-            type: Fetch
-        },
-        pull: {
-            type: Pull
-        },
+        fetch: Fetch,
+        pull: Pull,
         remote: Remote,
         submodule: Submodule
     }

@@ -1,3 +1,11 @@
+/*
+ * `past-variadic.js`
+ *
+ * The purpose of this example is to demonstrate how values can be parsed after a variadic parameter.
+ *
+ * To run:
+ *      $ node past-variadic.js 1 2 3 Tim
+ */
 const Command = require('../index.js').Command;
 
 class Sum extends Command {

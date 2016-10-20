@@ -218,7 +218,7 @@ class SemverType extends Type {
         super({
             default: '1.0.0',
             name: 'semver',
-            help: 'A SemVer version, parseable by node-semver'
+            help: 'A SemVer version, parsed by node-semver'
         });
     }
 
@@ -227,7 +227,7 @@ class SemverType extends Type {
         if (Array.isArray(value)) {
             return value.map((i) => me.convert(i));
         }
-        return semver.clean(new String(value)||'');
+        return semver.parse(value||'');
     }
 
     is (value) {

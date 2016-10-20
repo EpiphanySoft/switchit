@@ -5,7 +5,7 @@ const Item = require('./Item');
 const Type = require('./Type');
 
 const itemRe = new RegExp('^\\s*(?:' +
-                '(?:([a-z])#)?([a-z_]\\w*)' +         // optional ("c#" [1]) "name" [2]
+                '(?:([a-z])#)?([a-z_][\\w-]*)' +         // optional ("c#" [1]) "name" [2]
                 '(?:[:]([a-z_]\\w*))?' +          // optional ":type" [3]
                 '((?:\\.\\.\\.)|(?:\\[\\]))?'  +  // optional "..." or "[]" [4]
             ')\\s*$', 'i');
@@ -101,7 +101,7 @@ class Value extends Item {
             };
         }
 
-        if (!valid) {
+        if (!valid || !item) {
             throw new Error(`Invalid ${kind} definition syntax: "${def}"`);
         }
 

@@ -1,3 +1,12 @@
+/*
+ * `asynchronous.js`
+ *
+ * The purpose of this example is to demonstrate how an asynchronous command would work thanks to the
+ * promise based processing pipeline.
+ *
+ * To run:
+ *      $ node asynchronous.js
+ */
 const Command = require('../index.js').Command;
 
 class Timeout extends Command {

@@ -1,3 +1,11 @@
+/*
+ * `divide.js`
+ *
+ * The purpose of this example is to demonstrate how parameters are read from command line arguments.
+ *
+ * To run:
+ *      $ node divide.js 10 5
+ */
 const Command = require('../index.js').Command;
 
 class Divide extends Command {

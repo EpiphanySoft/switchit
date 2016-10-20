@@ -12,19 +12,12 @@ class BrewCoffee extends BrewBeverage {
 }
 
 BrewCoffee.define({
-    help: `Brew some coffee`,
-    switches: {
-        sort: {
-            help: `The soft of coffee to prepare (possible: ${sorts.join(', ')})`,
-            type: 'string',
-            value: sorts[0]
-        },
-        shots: {
-            help: 'The number of espresso shots to include',
-            type: 'number',
-            value: 1
-        }
-    }
+    help: {
+        '': 'Brew some coffee',
+        sort: `The soft of coffee to prepare (possible: ${sorts.join(', ')})`,
+        shots: 'The number of espresso shots to include'
+    },
+    switches: `[sort=${sorts[0]}] [shots:number=1]`
 });
 
 BrewCoffee.prototype.beverageName = 'coffee';

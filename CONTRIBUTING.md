@@ -1,21 +1,24 @@
 #Contributing
 
-We love pull requests from everyone!
+Pull requests are always welcome!
 
 ## How to contribute
-Fork, then clone the repo:
+Fork, then clone your repo:
 
     git clone git@github.com:your-username/switchit.git
 
-Install gulp globally if you don't already have it:
+Install gulp-cli globally if you don't already have it:
 
-    npm install -g gulp
+    npm install -g gulp-cli
     
 Make sure the tests pass and note the coverage percentage:
 
     gulp test
 
-Make your change. Add tests for your change. Make the tests pass again and keep (or improve) the same level of coverage:
+If they don't, please check our [issues page](https://github.com/dongryphon/switchit/issues) for known issues that
+may cause the test faliure.
+
+Make your change. Add tests for your change. Make the tests pass again and make sure to keep (or improve) the coverage percentage:
 
     gulp test
 

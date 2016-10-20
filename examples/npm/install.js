@@ -8,24 +8,14 @@ class Install extends Command {
 }
 
 Install.define({
-    help: 'Install a package',
-    switches: {
-        global: {
-            help: 'Use this switch to install the package globally',
-            type: 'boolean',
-            value: false
-        },
-        save: {
-            help: 'Package will appear in your dependencies',
-            type: 'boolean',
-            value: false
-        },
-        'save-dev': {
-            help: 'Package will appear in your devDependencies',
-            type: 'boolean',
-            value: false
-        }
+    help: {
+        '': 'Install a package',
+        'global': 'Use this switch to install the package globally',
+        'save': 'Package will appear in your dependencies',
+        'save-dev': 'Package will appear in your devDependencies',
+        'folderorname': 'The package folder path or name in the npm registry'
     },
+    switches: '[global:boolean=false] [save:boolean=false] [save-dev:boolean=false]',
     parameters: '[folderorname:string=.]'
 });
 

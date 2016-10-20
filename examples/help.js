@@ -1,3 +1,12 @@
+/*
+ * `help.js`
+ *
+ * The purpose of this example is to demonstrate how the Help command can be included in a container.
+ *
+ * To run:
+ *      $ node help.js help
+ *      $ node help.js help coffee
+ */
 const {
     Command,
     Container,
@@ -15,8 +24,7 @@ class BrewBeverage extends Command {
 }
 
 BrewBeverage.define({
-    switches: '[extra:string[]]',
-    parameters: '[extra:string[]]'
+    switches: '{[extra:string[]]}'
 });
 
 class BrewCoffee extends BrewBeverage {}

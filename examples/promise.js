@@ -1,3 +1,12 @@
+/*
+ * `promise.js`
+ *
+ * The purpose of this example is to demonstrate how the `.run()` command returns a promise.
+ *
+ * To run:
+ *      $ node promise.js
+ *      $ node promise.js Tim
+ */
 const Command = require('../').Command;
 
 class SayHi extends Command {

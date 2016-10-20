@@ -6,9 +6,7 @@ const {
 const Init = require('./init.js');
 const Install = require('./install.js');
 
-class Npm extends Container {
-    //
-}
+class Npm extends Container {}
 
 Npm.define({
     help: 'javascript package manager',

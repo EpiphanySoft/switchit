@@ -1,3 +1,12 @@
+/*
+ * `git.js` A mock git implementation built on top of `switchit`
+ *
+ * The purpose of this sample application is to demonstrate a number of the features of `switchit`
+ * See the example readme file at git/Readme.md for more information.
+ *
+ * To run:
+ *      $ node git.js
+ */
 const Git = require('./git/index.js');
 const git = new Git();
 

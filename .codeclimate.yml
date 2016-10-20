@@ -1,6 +1,0 @@
-languages:
-  JavaScript: true
-exclude_paths:
-- "examples/coffeehouse-singlefile.js"
-- "examples/git-singlefile.js"
-- "examples/npm-singlefile.js"

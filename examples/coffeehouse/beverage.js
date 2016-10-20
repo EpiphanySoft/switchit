@@ -1,8 +1,10 @@
 const Command = require('../../index.js').Command;
 
 class BrewBeverage extends Command {
-    execute (params) {
+    beforeExecute (params) {
         this._validateSort(params.sort);
+    }
+    execute (params) {
         console.log(this.brewMessage);
         if (params.extra.length > 0) {
             console.log('Add the following extras:');
@@ -17,20 +19,12 @@ class BrewBeverage extends Command {
 }
 
 BrewBeverage.define({
-    switches: {
-        extra: {
-            help: 'One or more extras to add',
-            type: 'string',
-            vargs: true,
-            value: []
-        },
-        milk: {
-            help: 'Add some milk',
-            type: 'boolean',
-            value: false
-        }
+    help: {
+        'extra': 'One or more extras to add',
+        'milk': 'Add some milk'
     },
-    parameters: '[extra:string[]]'
+    switches: '[milk:boolean=false]',
+    parameters: '[{extra:string[]}]'
 });
 
 module.exports = BrewBeverage;

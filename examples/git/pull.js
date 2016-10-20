@@ -7,8 +7,11 @@ class Pull extends Command {
 }
 
 Pull.define({
-    help: 'Pulls changes from a remote branch',
-
+    help: {
+        '': 'Pulls changes from a remote branch',
+        'remote': 'The remote repository to push to',
+        'branch': 'The name of the branch to push'
+    },
     parameters: 'remote [branch:string=master]'
 });
 

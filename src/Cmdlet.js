@@ -271,7 +271,7 @@ class Cmdlet {
                         name: entry.name,
                         validate: (input) => {
                             // If we're here this means we can't take an empty value
-                            if (input === '') {
+                            if (input === '' && (('value' in entry && entry.value !== '') || !('value' in entry))) {
                                 return `${Util.capitalize(entry.kind)} '${entry.name}' can't be empty.`;
                             }
                             // If the value doesn't convert, then we've got a problem!
@@ -284,7 +284,7 @@ class Cmdlet {
                         message: `${entry.name}${entry.type !== 'string' ? ' <' + entry.type + '>' : ''}:`,
                         vargs: entry.vargs,
                         type: entry.type === 'boolean' ? 'confirm' : 'input',
-                        default: ('value' in entry ? entry.value : undefined)
+                        default: ('value' in entry && entry.value !== '' ? entry.value : undefined)
                     });
                 });
 
@@ -381,6 +381,7 @@ class Cmdlet {
         if (me.constructor.interactiveInvert) {
             me.interactive = !me.interactive;
         }
+        delete params[me.constructor.interactiveParam];
     }
     
     configure (args) {

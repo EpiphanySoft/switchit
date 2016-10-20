@@ -18,13 +18,11 @@ class Commit extends Command {
 }
 
 Commit.define({
-    help: 'Commits current changes',
-
-    switches: {
-        message: {
-            help: 'The commit message'
-        }
-    }
+    help: {
+        '': 'Commits current changes',
+        'message': 'The commit message'
+    },
+    switches: 'message'
 });
 
 module.exports = Commit;

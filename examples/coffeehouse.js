@@ -1,3 +1,12 @@
+/*
+ * `coffeehouse.js` Command-line application example
+ *
+ * The purpose of this sample application is to demonstrate most of the features of `switchit`
+ * See the example readme file at coffeehouse/Readme.md for more information.
+ *
+ * To run:
+ *      $ node coffeehouse.js
+ */
 const Coffeehouse = require('./coffeehouse/index.js');
 const coffeehouse = new Coffeehouse();
 

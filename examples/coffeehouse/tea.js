@@ -12,19 +12,12 @@ class BrewTea extends BrewBeverage {
 }
 
 BrewTea.define({
-    help: 'Brew some tea',
-    switches: {
-        sort: {
-            help: `The soft of tea to prepare (possible: ${sorts.join(', ')})`,
-            type: 'string',
-            value: sorts[0]
-        },
-        lime: {
-            help: 'Add some lime',
-            type: 'boolean',
-            value: false
-        }
-    }
+    help: {
+        '': 'Brew some tea',
+        'sort': `The soft of tea to prepare (possible: ${sorts.join(', ')})`,
+        'lime': 'Add some lime'
+    },
+    switches: `[sort=${sorts[0]}] [lime:boolean=false]`
 });
 
 BrewTea.prototype.beverageName = 'tea';

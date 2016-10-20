@@ -1,3 +1,11 @@
+/*
+ * `inheritance.js`
+ *
+ * The purpose of this example is to demonstrate `switchit`'s object oriented API.
+ *
+ * To run:
+ *      $ node inheritance.js Tim
+ */
 const Command = require('../index.js').Command;
 
 class SayHi extends Command {

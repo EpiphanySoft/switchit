@@ -1,3 +1,11 @@
+/*
+ * `interactive.js`
+ *
+ * The purpose of this example is to demonstrate the interactive capabilities of `switchit`.
+ *
+ * To run:
+ *      $ node interactive.js
+ */
 const Command = require('../').Command;
 
 class SayHi extends Command {
@@ -9,6 +17,8 @@ class SayHi extends Command {
 SayHi.define({
     parameters: 'name',
     interactive: true,
+    // Optionally add some help texts to improve the UI
+    //  more info at docs/Readme.md#built-in-help-command
     help: {
         '': 'This is a command that says hi!',
         'name': 'Your name'

@@ -13,16 +13,16 @@ A no-nonsense framework for command-line switch parsing and command dispatching.
 
 * [x] [Robust command definition using a simple object-oriented API](#getting-started) 
 * [x] [Effortless switch and positional argument parsing](#support-for-positional-arguments) 
-* [x] [Promise based command dispatching](#promises-we-ve-got-those-too) 
+* [x] [Promise based command dispatching](#promises-switchit-has-those-too) 
 * [x] [Interactive prompt for missing values](#interactive-prompt-for-missing-values)
-* [x] [Required and optional switches and parameters](docs/Features.md#required-and-optional-switches-and-parameters) 
+* [x] [Required and optional switches and parameters](docs/Features.md#required-and-optional-values) 
 * [x] [Variadic switches and parameters](docs/Features.md#variadic-switches-and-parameters) 
-* [x] [Nested command hierarchy (like `git remote add {args}`)](docs/Features.md#nested-command-hierarchy) 
-* [x] [Advanced command chaining using `and` and `then`](docs/Features.md#advanced-command-chaining) 
-* [x] [Dispatching via shortest unique prefix for sub-commands and switches](docs/Features.md#shortest-unique-prefix-for-sub-commands-and-switches) 
-* [x] [Custom command aliases and default sub-command](docs/Features.md#custom-aliases-and-default-sub-command) 
-* [x] [Complex command invocation using response files](docs/Features.md#response-file-processing) 
-* [x] [Comprehensive built-in help command](docs/Features.md#built-in-help) 
+* [x] [Nested command hierarchy (like `git remote add {args}`)](docs/Features.md#commands-and-sub-commands) 
+* [x] [Advanced command chaining using `and` and `then`](docs/Features.md#command-chaining) 
+* [x] [Shortest unique prefix matching for switches and commands](docs/Features.md#shortest-unique-prefix-switches) 
+* [x] [Custom command aliases and default sub-command](docs/Features.md#sub-command-aliases) 
+* [x] [Complex command invocation using response files](docs/Features.md#complex-command-processing) 
+* [x] [Comprehensive built-in help command](docs/Features.md#built-in-help-command) 
 
 There are so many features and functionality to describe that they got [its own document](docs/Features.md) 
 just to outline them all!
@@ -74,7 +74,7 @@ Look ma, no switches!
     Hi, Paul!
 
 Do you want to read a parameter form either positional arguments or switches? 
-[`switchit` supports it too!](docs/Features.md#Switchy-params) 
+[`switchit` supports it too!](docs/Features.md#switchy-parameters) 
 
 ### Promises? `switchit` has those too! 
 
@@ -124,7 +124,7 @@ Run it with no arguments to see it in action:
     Your name
     ? name: 
 
-Check [docs/Interactive.md](docs/Features.md#Interactive-prompt-on-missing-values) for more information
+Check [docs/Features.md](docs/Features.md#interactive-mode) for more information
 on how to take advantage of this feature.
 
 ## More examples and API

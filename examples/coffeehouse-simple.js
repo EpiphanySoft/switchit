@@ -1,3 +1,16 @@
+/*
+ * `coffeehouse-simple.js`
+ *
+ * The purpose of this example is to demonstrate a couple `switchit` features:
+ *   - How parameters and switches with the same name coalesce to a single property of 'params'
+ *   - Command containers
+ *   - Command inheritance (Object-oriented API)
+ *
+ * To run:
+ *      $ node coffeehouse-simple.js
+ *      $ node coffeehouse-simple.js coffee
+ *      $ node coffeehouse-simple.js tea Honey Lime
+ */
 const {
     Command,
     Container

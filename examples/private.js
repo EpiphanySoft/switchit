@@ -1,3 +1,12 @@
+/*
+ * `private.js`
+ *
+ * The purpose of this example is to demonstrate how switches can be made private.
+ *
+ * To run:
+ *      $ node private.js help
+ *      $ node private.js help --all
+ */
 const {
     Container,
     Help

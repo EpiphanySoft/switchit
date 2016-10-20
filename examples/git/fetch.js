@@ -7,8 +7,10 @@ class Fetch extends Command {
 }
 
 Fetch.define({
-    help: 'Fetches changes from a remote',
-
+    help: {
+        '': 'Fetches changes from a remote',
+        'remote': 'The remote to fetch changes from'
+    },
     parameters: 'remote'
 });
 

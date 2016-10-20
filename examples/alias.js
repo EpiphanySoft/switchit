@@ -1,3 +1,12 @@
+/*
+ * `alias.js`
+ *
+ * The purpose of this example is to demonstrate how command aliases are configured.
+ *
+ * To run:
+ *      $ node alias.js coffe
+ *      $ node alias.js koffie
+ */
 const {
     Command,
     Container

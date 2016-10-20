@@ -13,8 +13,11 @@ class AddSubmodule extends Command {
 }
 
 AddSubmodule.define({
-    help: 'Add the given <repository> as a submodule at the given <path>',
-
+    help: {
+        '': 'Add the given <repository> as a submodule at the given <path>',
+        'repository': 'The path to the repository',
+        'path': 'The path to this submodule'
+    },
     parameters: [
         'repository',
         {
