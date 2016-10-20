@@ -7,13 +7,17 @@ Fork, then clone the repo:
 
     git clone git@github.com:your-username/switchit.git
 
-Make sure the tests pass:
+Install gulp globally if you don't already have it:
 
-    npm test
+    npm install -g gulp
+    
+Make sure the tests pass and note the coverage percentage:
 
-Make your change. Add tests for your change. Make the tests pass again:
+    gulp test
 
-    npm test
+Make your change. Add tests for your change. Make the tests pass again and keep (or improve) the same level of coverage:
+
+    gulp test
 
 Push to your fork and submit a pull request.
 

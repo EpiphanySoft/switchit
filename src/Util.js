@@ -24,6 +24,14 @@ class Util {
 
         return promise;
     }
+
+    static pluralize (noun, qty, suffix = 's', pluralNoun) {
+        return `${qty > 1 ? (!!pluralNoun ? pluralNoun : noun + suffix) : noun}`;
+    }
+
+    static capitalize (str, titleCase = false) {
+        return `${str[0].toUpperCase()}${titleCase ? str.slice(1).toLowerCase() : str.slice(1)}`;
+    }
 }
 
 Util.finally = function (promise, callback) {

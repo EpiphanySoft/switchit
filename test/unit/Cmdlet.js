@@ -331,10 +331,10 @@ describe('Cmdlet', function() {
             switches: 'bar:number'
         });
 
-        new Foo().configure(new Arguments(['--bar'])).then(() => {
+        new Foo().run(new Arguments(['--bar'])).then(() => {
             expect().fail();
         }, (e) => {
-            expect(e.message).to.equal('Missing value for "bar" switch');
+            expect(e.message).to.equal('Missing value for switch: "bar"');
             done();
         });
     });
@@ -346,10 +346,10 @@ describe('Cmdlet', function() {
             switches: 'bar:number'
         });
 
-        new Foo().configure(new Arguments(['--bar', 'a'])).then(() => {
+        new Foo().run(new Arguments(['--bar', 'a'])).then(() => {
             expect().fail();
         }, (e) => {
-            expect(e.message).to.equal('Invalid value for "bar" switch: "a"');
+            expect(e.message).to.equal('Missing value for switch: "bar"');
             done();
         });
     });

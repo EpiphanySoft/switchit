@@ -267,7 +267,7 @@ describe('Container', function() {
             commands: [ Bar ]
         });
 
-        Util.rejects(done, 'Missing required switch "baz"',
+        Util.rejects(done, 'Missing value for switch: "baz"',
             new Foo().run(['bar']));
     });
 

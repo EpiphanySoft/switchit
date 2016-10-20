@@ -207,7 +207,7 @@ describe('Type', () => {
         }
     });
 
-    it('should provide a way to get the type for a given (directly or indirectly) known value type', function () {
+    it('should provide a way to get the type for a (directly or indirectly) given known value type', function () {
         expect(Type.of('foo').name).to.equal('string');
         expect(Type.of(4).name).to.equal('number');
         expect(Type.of(true).name).to.equal('boolean');

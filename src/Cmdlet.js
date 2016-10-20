@@ -1,13 +1,16 @@
 "use strict";
 
+const inquirer = require('inquirer');
+
 const Arguments = require('./Arguments');
 const Switches = require('./Switches');
 const Type = require('./Type');
 const Util = require('./Util');
 
-const paramRe = /^\-{1,2}([a-z_-][\w-]*)$/i;
-const shortParamGroupRe = /^\-([a-z_-][\w-]*)$/i;
-const paramAssignRe = /\-{1,2}([^=]+)\=(.*)/i;
+const paramRe = /^-{1,2}([a-z][\w-]*)$/i;
+const shortParamGroupRe = /^-([a-z][\w-]*)$/i;
+const paramAssignRe = /-{1,2}([^=]+)=(.*)/i;
+const negativeParamRe = /^-{1,2}no-([a-z][\w-]*)$/i;
 const plusParamRe = /\+([a-z_-][\w-]*)/i;
 
 /**
@@ -103,6 +106,9 @@ class Cmdlet {
         else if (name === 'help') {
             this.defineHelp(value);
         }
+        else if (name == 'interactive') {
+            this.defineInteractive(value);
+        }
         else {
             this[name] = value;
         }
@@ -138,6 +144,26 @@ class Cmdlet {
                     }
                 }
             }
+        }
+    }
+
+    static defineInteractive (value) {
+        let re = /^(!)?([a-z_-]+)$/;
+        if (value === true) {
+            value = "!headless";
+        }
+        if (value !== false && (typeof value === 'string' || value instanceof String)) {
+            if (!re.test(value)) {
+                throw new Error(`Invalid syntax for 'interactive' aspect: ${value}`);
+            }
+            let match = value.match(re);
+            let invert = match[1];
+            let switchName = match[2];
+
+            this.switches.add(`[${switchName}:boolean=false]`);
+
+            this.interactiveParam = switchName;
+            this.interactiveInvert = !!invert;
         }
     }
     
@@ -198,6 +224,143 @@ class Cmdlet {
         this.switches.applyDefaults(params);
     }
 
+    ask (entry) {
+        if (this.askQueue.fields.indexOf(entry.name) !== -1) {
+            return;
+        }
+        if (!('value' in entry)) {
+            if (!(`missing${entry.kind}` in this.askQueue)) {
+                this.askQueue[`missing${entry.kind}`] = [];
+                this.askQueue[`${entry.kind}`] = 0;
+            }
+            this.askQueue[`missing${entry.kind}`].push(entry.name);
+            this.askQueue[`${entry.kind}`]++;
+            this.askQueue.missing++;
+        }
+        (this.askQueue.all || (this.askQueue.all = [])).push(entry);
+        this.askQueue.fields.push(entry.name);
+    }
+
+    askMissing (params) {
+        var me = this;
+        return new Promise((resolve, reject) => {
+            if (me.askQueue.missing == 0) {
+                return resolve();
+            }
+            if (!me.isInteractive()) {
+                let msg = ["Missing value for"];
+                if (me.askQueue.switch > 0) {
+                    msg.push(`${Util.pluralize('switch', me.askQueue.switch, 'es')}: "${me.askQueue.missingswitch.join(', ')}"`)
+                }
+                if (me.askQueue.parameter > 0) {
+                    msg.push(`${Util.pluralize('parameter', me.askQueue.parameter)}: "${me.askQueue.missingparameter.join(', ')}"`);
+                    if (msg.length > 2) { // Reformat the message because we have both switches and parameters missing.
+                        msg[0] = `${msg[0]}\n`;
+                        msg[1] = ` - ${msg[1]}\n`;
+                        msg[2] = ` - ${msg[2]}`;
+                    }
+                }
+                reject(new Error (msg.join(' ')));
+            } else {
+                let prompts = [];
+
+                me.askQueue.all.sort((a,b) => {
+                    return a.name > b.name;
+                }).forEach((entry) => {
+                    prompts.push({
+                        name: entry.name,
+                        validate: (input) => {
+                            // If we're here this means we can't take an empty value
+                            if (input === '') {
+                                return `${Util.capitalize(entry.kind)} '${entry.name}' can't be empty.`;
+                            }
+                            // If the value doesn't convert, then we've got a problem!
+                            if (entry.typeCls.convert(input) === null) {
+                                return `${Util.capitalize(entry.kind)} '${entry.name}' needs to be a ${entry.type} (${entry.typeCls.help})`;
+                            }
+                            return true;
+                        },
+                        help: `${entry.help ? entry.help : ''}${entry.vargs ? (entry.help ? '\n':'') + '(Enter each value on a separate line and a blank value at the end)' : ''}`,
+                        message: `${entry.name}${entry.type !== 'string' ? ' <' + entry.type + '>' : ''}:`,
+                        vargs: entry.vargs,
+                        type: entry.type === 'boolean' ? 'confirm' : 'input',
+                        default: ('value' in entry ? entry.value : undefined)
+                    });
+                });
+
+                if (!!me.constructor.help) {
+                    console.log(me.constructor.help);
+                }
+                console.log("Press ^C at any time to quit.\n");
+
+                // Since some prompts require special treatment (I'm looking at you vargs), this function will take care
+                // of each individually
+                let allAnswers = {};
+                let showNextPrompt = (answers) => {
+                    // Accumulate all answers
+                    Object.assign(allAnswers, answers || {});
+                    if (prompts.length > 0) {
+                        let next = prompts.shift();
+                        if (next.help) {
+                            console.log(next.help);
+                        }
+                        // This is a varargs prompt, let's take care of it...
+                        if (next.vargs) {
+                            let values = [];
+                            next._askAgain = true;
+
+                            // Wrap the original validate to account for the vargs validations
+                            next._validate = next.validate;
+                            next.validate = (input) => {
+                                // If we don't have a value yet and you just pressed enter fail because at least one is needed!
+                                if (values.length == 0 && input === '') {
+                                    return `You must provide at least one value for '${next.name}'`;
+                                } else if (input === '') {
+                                    // We have at least one value and you just pressed enter, stop asking
+                                    next._askAgain = false;
+                                    return true;
+                                } else {
+                                    // Any value should pass the original validation!
+                                    return next._validate(input);
+                                }
+                            };
+                            // Yo dawg! I heard you like recursion...
+                            let askAnother = (done) => {
+                                return inquirer.prompt(next).then((props) => {
+                                    // Since we don't want that extra empty line here, skip it
+                                    if (props[next.name] != '') {
+                                        values.push(props[next.name]);
+                                    }
+                                    if (next._askAgain) {
+                                          return askAnother(done);
+                                    } else {
+                                        // Since we're not asking anymore, move forward with all accumulated answers
+                                        // 'done' here should be 'showNextPrompt'
+                                        return done({
+                                            [next.name]: values
+                                        });
+                                    }
+                                });
+                            };
+                            // Start asking for multiple values!
+                            return askAnother(showNextPrompt);
+                        } else {
+                            // This is a 'regular' prompt, ask away!
+                            return inquirer.prompt(next).then(showNextPrompt);
+                        }
+                    }
+                };
+
+                // Show first prompt
+                showNextPrompt().then(function () {
+                    // This promise will be fulfilled when all prompts are complete
+                    me.updateFromAnswers(allAnswers, params);
+                    return resolve();
+                });
+            }
+        });
+    }
+
     atRoot () {
         return !this.parent;
     }
@@ -208,12 +371,28 @@ class Cmdlet {
         parent.child = this;
         return this;
     }
+
+    beforeExecute (params) {
+        var me = this;
+
+        me.switches.getToConfirm(params || this.params).forEach((item) => me.ask(item));
+
+        me.interactive = params[me.constructor.interactiveParam];
+        if (me.constructor.interactiveInvert) {
+            me.interactive = !me.interactive;
+        }
+    }
     
     configure (args) {
         const me = this;
         var params = me.params,
             switches = me.switches,
             entry, match, val;
+
+        this.askQueue = {
+            fields: [],
+            missing: 0
+        };
 
         return args.pull().then(arg => {
             // While we have arguments, try to process them
@@ -224,6 +403,9 @@ class Cmdlet {
                     // +param
                     val = true;
                 }
+                else if (match = negativeParamRe.exec(arg)) {
+                    val = false;
+                }
                 else if ((match = paramAssignRe.exec(arg))) {  // <== assignment
                     // --param=value
                     val = match[2];
@@ -232,11 +414,14 @@ class Cmdlet {
                     // --param value
                     entry = switches.lookup(match[1]);
 
+                    if (!entry) {
+                        me.raise(`Unknown switch: ${match[1]}`);
+                    }
                     return args.pull().then(value => {
                         let result = entry.setRaw(params, value);
 
                         if (result === 1) { // Missing value
-                            me.raise(`Missing value for "${entry.name}" switch`);
+                            me.ask(entry);
                         }
                         if (result === 2) {  // Invalid value
                             me.raise(`Invalid value for "${entry.name}" switch: "${value}"`);
@@ -256,6 +441,10 @@ class Cmdlet {
                 }
 
                 entry = switches.lookup(match[1]);
+
+                if (!entry) {
+                    me.raise(`Unknown switch: ${match[1]}`);
+                }
 
                 entry.setRaw(params, val);
 
@@ -284,9 +473,11 @@ class Cmdlet {
 
         return Util.finally(me.configure(args).then(() => {
             me.applyDefaults(params);
-            me.validate(params);
+            me.beforeExecute(params);
 
-            return me.execute(params, args);
+            return me.askMissing(params).then(() => {
+                return me.execute(params, args);
+            });
         }),
         () => {
             args.ownerPop(me);
@@ -302,6 +493,18 @@ class Cmdlet {
         }
 
         return candidate;
+    }
+
+    isInteractive () {
+        let candidate = this;
+        while (candidate != null) {
+            if (candidate.interactive) {
+                return true;
+            } else {
+                candidate = candidate.up();
+            }
+        }
+        return false;
     }
 
     leaf () {
@@ -365,12 +568,14 @@ class Cmdlet {
 
         return candidate;
     }
-    
-    validate (params) {
-        var err = this.switches.validate(params || this.params);
 
-        if (err) {
-            this.raise(err);
+    updateFromAnswers (answers, params) {
+        for (let switchName of Object.keys(answers)) {
+            let entry = this.switches.lookup(switchName);
+            if (entry) {
+                entry.setRaw(params, answers[switchName]);
+                delete answers[switchName];
+            }
         }
     }
 

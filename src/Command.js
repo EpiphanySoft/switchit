@@ -73,6 +73,12 @@ class Command extends Cmdlet {
         this.parameters.applyDefaults(params);
     }
 
+    beforeExecute (params) {
+        super.beforeExecute(params);
+        let me = this;
+        me.parameters.getToConfirm(params || this.params).forEach((item) => me.ask(item));
+    }
+
     processArg (arg, args) {
         let param = this.parameters.at(this._paramPos);
 
@@ -106,13 +112,14 @@ class Command extends Cmdlet {
         return this.configure(args);
     }
 
-    validate (params) {
-        super.validate(params);
-
-        var err = this.parameters.validate(params || this.params);
-
-        if (err) {
-            this.raise(err);
+    updateFromAnswers (answers, params) {
+        super.updateFromAnswers(answers, params);
+        for (let paramName of Object.keys(answers)) {
+            let entry = this.parameters.lookup(paramName);
+            if (entry) {
+                entry.setRaw(params, answers[paramName]);
+                delete answers[paramName];
+            }
         }
     }
 

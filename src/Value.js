@@ -49,7 +49,7 @@ class Value extends Item {
         var valid = true,
             optional = false,
             switchy = false,
-            i, item, value;
+            i, item, value, confirm;
 
         // Peel off "[]" from "[foo]" to leave "foo" (remember it as optional).
         if (def[0] === '[') {
@@ -77,6 +77,10 @@ class Value extends Item {
             i = def.indexOf('=');
             if (i > 0) {
                 value = def.substr(i + 1);
+                if (def.charAt(i-1) === "?") {
+                    confirm = true;
+                    i--;
+                }
                 def = def.substr(0, i);
             }
         }
@@ -92,7 +96,8 @@ class Value extends Item {
                 type: match[3] || null,
                 optional: optional,  // may not have a default value...
                 switch: switchy,
-                vargs: !!match[4]
+                vargs: !!match[4],
+                confirm: confirm
             };
         }
 
@@ -136,6 +141,7 @@ class Value extends Item {
                 this.type = 'string';
             }
         }
+        this.typeCls = Type.get(this.type);
     }
 
     /**

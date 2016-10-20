@@ -165,6 +165,26 @@ class Items {
         return map[name] || map[name.toLowerCase()];
     }
 
+    /**
+     * This method returns an array of `Value` that need to be confirmed or asked .
+     * @param {Object} params The parameter data object to validate, required params that are not present here will be returned.
+     * @return {Array} The `Value`s to confirm or ask, null if there are none.
+     */
+    getToConfirm (params) {
+        var items = [];
+
+        for (let item of this.items) {
+            if (item.confirm && (item.name in params)) {
+                item.value = params[item.name];
+            }
+            if (item.confirm || item.required && !(item.name in params)) {
+                item.kind = this.kind;
+                items.push(item);
+            }
+        }
+        return items;
+    }
+
     lookup (name) {
         var map = this.map,
             entry, first, loname, matches, ret;
@@ -209,27 +229,6 @@ class Items {
         }
 
         return ret || null;
-    }
-
-    /**
-     * This method returns a String describing problem(s) with the given `params`.
-     * @param {Object} params The parameter data object to validate.
-     * @return {String} The problem with the `params` or `null` if there is no problem.
-     */
-    validate (params) {
-        var missing;
-        
-        for (let item of this.items) {
-            if (item.required && !(item.name in params)) {
-                (missing || (missing = [])).push(item.name);
-            }
-        }
-        
-        if (missing) {
-            return `Missing required ${this.kind} "${missing.join(', ')}"`;
-        }
-        
-        return null;
     }
 }
 

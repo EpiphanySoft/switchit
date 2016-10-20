@@ -155,7 +155,7 @@ describe('Command', function() {
             switches: 'bar'
         });
 
-        Util.rejects(done, 'Missing required switch "bar"',
+        Util.rejects(done, 'Missing value for switch: "bar"',
             new Foo().run([]));
     });
 
@@ -216,7 +216,7 @@ describe('Command', function() {
             parameters: 'bar'
         });
 
-        Util.rejects(done, 'Missing required parameter "bar"',
+        Util.rejects(done, 'Missing value for parameter: "bar"',
             new Foo().run([]));
     });
 

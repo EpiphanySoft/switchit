@@ -1,5 +1,7 @@
 "use strict";
 
+const semver = require('semver');
+
 /**
  * @class Type
  * This class manages type conversions for a single data type. Instances of this class
@@ -123,7 +125,8 @@ class BooleanType extends Type {
             falseRe: /^(?:false|no|off)$/i,
 
             default: false,
-            name: 'boolean'
+            name: 'boolean',
+            help: 'One of true|false|yes|no|on|off'
         });
     }
 
@@ -146,39 +149,29 @@ class BooleanType extends Type {
     }
 }
 
-class DateType extends Type {
-    constructor () {
-        super({
-            default: new Date(),
-            name: 'date'
-        });
-    }
-
-    convert (value) {
-        return null;
-    }
-
-    is (value) {
-        var s = value && Object.prototype.toString.call(value);
-
-        return s === '[object Date]';
-    }
-}
-
 class NumberType extends Type {
     constructor () {
         super({
             default: 0,
             name: 'number',
 
-            re: /^[-+]?[0-9]*\.?[0-9]+(?:e[-+]?[0-9]+)?$/i
+            re: /^[-+]?[0-9]*\.?[0-9]+(?:e[-+]?[0-9]+)?$/i,
+            help: 'A numerical value'
         });
     }
 
     convert (value) {
+        let me = this;
+        if (Array.isArray(value)) {
+            return value.map((i) => me.convert(i));
+        }
+
         var r = +value;  // good start...
 
         if (typeof value !== 'number') {
+            if (value === false) {
+                return 0;
+            }
             // parseFloat accepts numbers followed by non-sense...
             // Beware of operator + and isNaN...
             //
@@ -208,17 +201,43 @@ class StringType extends Type {
     }
 
     convert (value) {
-        if (value == null) {
+        if (value == null || value === false) {
             return null;
         }
 
+        let me = this;
+        if (Array.isArray(value)) {
+            return value.map((i) => me.convert(i));
+        }
         return String(value);
     }
 }
 
+class SemverType extends Type {
+    constructor () {
+        super({
+            default: '1.0.0',
+            name: 'semver',
+            help: 'A SemVer version, parseable by node-semver'
+        });
+    }
+
+    convert (value) {
+        let me = this;
+        if (Array.isArray(value)) {
+            return value.map((i) => me.convert(i));
+        }
+        return semver.clean(new String(value)||'');
+    }
+
+    is (value) {
+        return semver.parse(value) !== null;
+    }
+}
+
 Type.define(new BooleanType());
-Type.define(new DateType());
 Type.define(new NumberType());
 Type.define(new StringType());
+Type.define(new SemverType());
 
 module.exports = Type;

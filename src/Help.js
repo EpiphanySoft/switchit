@@ -24,8 +24,8 @@ class Help extends Command {
     }
     // --------------------------------
 
-    validate (params) {
-        super.validate(params);
+    beforeExecute (params) {
+        super.beforeExecute(params);
         if (params.markdown && params.html) {
             this.raise('Conflicting switches "markdown" and "html" specify only one.');
         }

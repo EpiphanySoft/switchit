@@ -7,9 +7,9 @@ class SayHi extends Command {
 }
 
 SayHi.define({
-    switches: {
+    parameters: {
         name: {
-            value: 'Ringo'
+            switch: true
         }
     }
 });
