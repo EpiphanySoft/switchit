@@ -1,0 +1,17 @@
+{
+  "script": [
+    ["prompt"],
+    ["sleep"],
+    ["type", "node nested.js order pizza"],
+    ["sleep", 200],
+    ["line", false],
+    ["send", "🍕🍕🍕🍕 Aw yeah, pizza! 🍕🍕🍕🍕"],
+    ["line"],
+    ["sleep"],
+    ["type", "node nested.js order sushi"],
+    ["sleep", 200],
+    ["line", false],
+    ["send", "🍣🍣🍣🍣 I'm in the mood for some sushi! 🍣🍣🍣🍣"],
+    ["line"]
+  ]
+}

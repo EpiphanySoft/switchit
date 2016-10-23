@@ -1,0 +1,17 @@
+{
+  "script": [
+    ["prompt"],
+    ["sleep"],
+    ["type", "node minimal.js --name Tim"],
+    ["sleep", 200],
+    ["line", false],
+    ["send", "Hi, Tim!"],
+    ["line"],
+    ["sleep"],
+    ["type", "node minimal.js Tim"],
+    ["sleep", 200],
+    ["line", false],
+    ["send", "Hi, Tim!"],
+    ["line"]
+  ]
+}
