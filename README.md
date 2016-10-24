@@ -15,16 +15,16 @@ A no-nonsense framework for command-line switch parsing and command dispatching.
 * [x] [Effortless switch and positional argument parsing](#support-for-positional-arguments) 
 * [x] [Promise based command dispatching](#promises-switchit-has-those-too) 
 * [x] [Interactive prompt for missing values](#interactive-prompt-for-missing-values)
-* [x] [Required and optional switches and parameters](docs/Features.md#required-and-optional-values) 
-* [x] [Variadic switches and parameters](docs/Features.md#variadic-switches-and-parameters) 
-* [x] [Nested command hierarchy (like `git remote add {args}`)](docs/Features.md#commands-and-sub-commands) 
-* [x] [Advanced command chaining using `and` and `then`](docs/Features.md#command-chaining) 
-* [x] [Shortest unique prefix matching for switches and commands](docs/Features.md#shortest-unique-prefix-switches) 
-* [x] [Custom command aliases and default sub-command](docs/Features.md#sub-command-aliases) 
-* [x] [Complex command invocation using response files](docs/Features.md#complex-command-processing) 
-* [x] [Comprehensive built-in help command](docs/Features.md#built-in-help-command) 
+* [x] [Required and optional switches and parameters](docs/features/Switches-and-arguments.md#required-and-optional-values) 
+* [x] [Variadic switches and parameters](docs/features/Switches-and-arguments.md#variadic-switches-and-parameters) 
+* [x] [Nested command hierarchy (like `git remote add {args}`)](docs/features/Commands-and-subcommands.md#commands-and-sub-commands) 
+* [x] [Advanced command chaining using `and` and `then`](docs/features/Commands-and-subcommands.md#command-chaining) 
+* [x] [Shortest unique prefix matching for switches and commands](docs/features/Commands-and-subcommands.md#shortest-unique-prefix) 
+* [x] [Custom command aliases and default sub-command](docs/features/Commands-and-subcommands.md#sub-command-aliases) 
+* [x] [Complex command invocation using response files](docs/features/Response-file-processing.md#response-file-processing) 
+* [x] [Comprehensive built-in help command](docs/features/Help-command.md#built-in-help-command) 
 
-There are so many features and functionality to describe that they got [its own document](docs/Features.md) 
+There are so many features and functionality to describe that they got [its own document](docs/features#feature-overview) 
 just to outline them all!
 
 ## Getting Started
@@ -74,7 +74,7 @@ Look ma, no switches!
     Hi, Paul!
 
 Do you want to read a parameter form either positional arguments or switches? 
-[`switchit` supports it too!](docs/Features.md#switchy-parameters) 
+[`switchit` supports it too!](docs/features/Switches-and-arguments.md#switchy-parameters) 
 
 ### Promises? `switchit` has those too! 
 
@@ -124,7 +124,7 @@ Run it with no arguments to see it in action:
     Your name
     ? name: 
 
-Check [docs/Features.md](docs/Features.md#interactive-mode) for more information
+Check [docs/Features.md](docs/features/Interactive.md#interactive-mode) for more information
 on how to take advantage of this feature.
 
 ## More examples and API
