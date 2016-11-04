@@ -5,7 +5,7 @@ const expect = require('expect.js');
 
 const Container = require('../../src/Container');
 const Command = require('../../src/Command');
-const Help = require('../../src/Help');
+const Help = require('../../src/commands/Help');
 
 const Util = require('../util.js');
 

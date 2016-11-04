@@ -4,7 +4,7 @@ const Cmdlet = require('./Cmdlet');
 const Commands = require('./Commands');
 const Util = require('./Util');
 
-const Help = require('./Help');
+const Help = require('./commands/Help');
 
 class Container extends Cmdlet {
     static defineAspect (name, value) {

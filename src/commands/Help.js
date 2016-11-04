@@ -6,8 +6,8 @@ const chalk = require('chalk');
 const MarkedTerminal = require('marked-terminal');
 const stripAnsi = require('strip-ansi');
 
-const Container = require('./Container');
-const Command = require('./Command');
+const Container = require('../Container');
+const Command = require('../Command');
 
 class Help extends Command {
     static columnify (items, linePadding = 2, linePrefix = '') {

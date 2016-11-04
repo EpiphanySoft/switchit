@@ -2,9 +2,16 @@ module.exports = {
     Arguments: require('./src/Arguments'),
     Command: require('./src/Command'),
     Container: require('./src/Container'),
-    Help: require('./src/Help'),
     ResponseFile: require('./src/ResponseFile'),
     Type: require('./src/Type'),
+
+    // For historical
+    Help: require('./src/commands/Help'),
+
+    commands: {
+        Help: require('./src/commands/Help'),
+        Version: require('./src/commands/Version')
+    },
 
     // Internal stuff
     Cmdlet: require('./src/Cmdlet'),
