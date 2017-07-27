@@ -117,9 +117,9 @@ class Arguments {
 }
 
 Object.assign(Arguments.prototype, {
-    andRe: /and/i,
-    thenRe: /then/i,
-    conjunctionRe: /and|then/i
+    andRe: /\band\b/i,
+    thenRe: /\bthen\b/i,
+    conjunctionRe: /\band\b|\bthen\b/i
 });
 
 module.exports = Arguments;

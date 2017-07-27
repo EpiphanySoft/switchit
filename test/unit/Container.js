@@ -384,6 +384,45 @@ describe('Container', function() {
             foo.run('bar', 'baz', 'and', 'xyz', 'then', 'abc', 'def'));
     });
 
+    it('should not detect \'and\' or \'then\' when they are substrings', function (done) {
+        let ret = [];
+        class Foo extends Container {}
+        class Bar extends Container {}
+        class SomeCommand extends Command {
+            execute () {
+                ret.push('It');
+            }
+        }
+        class Xyz extends Command {
+            execute () {
+                ret.push('works');
+            }
+        }
+        class Abc extends Container {}
+        class Def extends Command {
+            execute () {
+                ret.push('fine!');
+            }
+        }
+
+        Foo.define({
+            commands: [Abc, Bar]
+        });
+        Abc.define({
+            commands: [Def]
+        });
+        Bar.define({
+            commands: [SomeCommand, Xyz]
+        });
+
+        var foo = new Foo();
+
+        Util.resolves(done, () => {
+                expect(ret.join(' ')).to.equal('It works fine!');
+            },
+            foo.run('bar', 'somecommand', 'and', 'xyz', 'then', 'abc', 'def'));
+    });
+
     it('should provide subcommands a way to calculate their full name', function (done) {
         class Foo extends Container {
         }
