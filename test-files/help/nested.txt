@@ -13,4 +13,4 @@ Available commands:
 
   · uvw                     The quick
 
-Run Baz bar help [command] for more information on a command.
+Run baz bar help [command] for more information on a command.

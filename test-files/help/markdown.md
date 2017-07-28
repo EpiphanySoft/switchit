@@ -10,4 +10,4 @@
 ## Available commands:
   · `uvw`                     The quick
 
-Run `Bar help [command]` for more information on a command.
+Run `bar help [command]` for more information on a command.

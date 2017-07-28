@@ -1,6 +1,8 @@
 "use strict";
 
+const chalk = require('chalk');
 const inquirer = require('inquirer');
+const File = require('phylo');
 
 const Arguments = require('./Arguments');
 const Switches = require('./Switches');
@@ -109,6 +111,9 @@ class Cmdlet {
         else if (name == 'interactive') {
             this.defineInteractive(value);
         }
+        else if (name == 'logo') {
+            this.defineLogo(value);
+        }
         else {
             this[name] = value;
         }
@@ -179,6 +184,30 @@ class Cmdlet {
         return ok;
     }
 
+    static defineLogo (value) {
+        if (value !== false) {
+            this._shouldShowLogo = true;
+        }
+        let boolVal = Type.get('boolean').convert(value);
+        if (boolVal) {
+            this._logo = true;
+        } else if (boolVal === null) {
+            if (value instanceof String || typeof value === 'string') {
+                this._logo = {
+                    name: value
+                };
+            } else if (value instanceof Object || typeof value === 'object') {
+                if (value.name || value.version) {
+                    this._logo = value;
+                } else {
+                    this._shouldShowLogo = false;
+                }
+            } else {
+                this._shouldShowLogo = false;
+            }
+        }
+    }
+
     static get switches () {
         return Switches.get(this);
     }
@@ -213,11 +242,29 @@ class Cmdlet {
         
         s = s ? s.fullName + ' ' : '';
         
-        return s + (this.name || this.constructor.title);
+        return s.toLowerCase() + (this.name || this.constructor.title).toLowerCase();
     }
 
     get switches () {
         return this.constructor.switches;
+    }
+
+    get logo () {
+        let me = this;
+        let cls = me.constructor;
+        let pkg = me.root().pkgConfig || {};
+        let name = (cls.name || pkg.name).toLowerCase();
+        let version = pkg.version;
+
+        if (cls._logo === true) {
+            cls._logo = {};
+        }
+
+        cls._logo = Object.assign({
+            name, version
+        }, cls._logo);
+ 
+        return `${cls._logo.name}${cls._logo.version ? ' v' + cls._logo.version : ''}`;        
     }
 
     applyDefaults (params) {
@@ -395,6 +442,17 @@ class Cmdlet {
             missing: 0
         };
 
+        if (this.atRoot()) {
+            this.pkgConfig = File.from(require.main.filename).upTo('package.json').load();
+            // This is to avoid examples loading the main project package.json info
+            if (this.pkgConfig.name === 'switchit') {
+                this.pkgConfig = {};
+            }
+            if (!this.pkgConfig.name) {
+                this.pkgConfig.name = this.constructor.name.toLowerCase();
+            }
+        }
+
         return args.pull().then(arg => {
             // While we have arguments, try to process them
             if (arg !== null) {
@@ -477,6 +535,7 @@ class Cmdlet {
             me.beforeExecute(params);
 
             return me.askMissing(params).then(() => {
+                me.showLogo();
                 return me.execute(params, args);
             });
         }),
@@ -557,6 +616,22 @@ class Cmdlet {
         a = args.isArguments ? args : new Arguments(args);
 
         return this.dispatch(a);
+    }
+
+    showLogo () {
+        let me = this;
+        let root = me.root();
+        let rootCtor = root.constructor;
+        
+
+        if (me.isCommand && rootCtor._shouldShowLogo) {
+            console.log(chalk.bold(root.logo));
+            this.skipLogo();
+        }
+    }
+
+    skipLogo () {
+        this.constructor._shouldShowLogo = false;
     }
 
     up (name) {

@@ -5,7 +5,7 @@ module.exports = {
     ResponseFile: require('./src/ResponseFile'),
     Type: require('./src/Type'),
 
-    // For historical
+    // For backwards compatibility
     Help: require('./src/commands/Help'),
 
     commands: {

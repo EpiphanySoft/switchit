@@ -8,6 +8,8 @@ const Arguments = require('../../src/Arguments');
 const Type = require('../../src/Type');
 const co = require('co');
 
+const Util = require('../util');
+
 describe('Cmdlet', function() {
     it('should describe itself as a Cmdlet at the class and instance level', function () {
         class Foo extends Cmdlet {}
@@ -352,5 +354,5 @@ describe('Cmdlet', function() {
             expect(e.message).to.equal('Missing value for switch: "bar"');
             done();
         });
-    });
+    });    
 });

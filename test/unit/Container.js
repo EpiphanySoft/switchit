@@ -319,7 +319,7 @@ describe('Container', function() {
             new Foo().run('bar', 'baz'));
     });
 
-    it('should not allow implicit command chaining at non-root', function (done) {
+    it('should not allow implicit command chaining at non-root', function () {
         class Foo extends Container {}
         class Bar extends Container {}
         class Baz extends Command {
@@ -337,11 +337,12 @@ describe('Container', function() {
             commands: [Bar]
         });
 
-        new Foo().run(['bar', 'baz', 'then','bar', 'baz','xyz']).then(() => {
-            expect().fail();
-        }, (e) => {
-            expect(e.message).to.equal('Invalid command "xyz" following "Foo Bar"');
-            done();
+        return new Promise((resolve, reject) => {
+            new Foo().run(['bar', 'baz', 'then','bar', 'baz','xyz']).then(() => {
+                expect().fail();
+            }, (e) => {
+                expect(e.message).to.equal('Invalid command "xyz" following "Foo Bar"');            
+            }).then(resolve,resolve);
         });
     });
 
@@ -441,7 +442,7 @@ describe('Container', function() {
             commands: [Bar]
         });
 
-        Util.resolves(done, 'Foo Bar Baz',
+        Util.resolves(done, 'foo bar baz',
             new Foo().run(['bar', 'baz']));
     });
 
@@ -459,7 +460,7 @@ describe('Container', function() {
             commands: [Bar]
         });
 
-        Util.resolves(done, 'somefoo Bar',
+        Util.resolves(done, 'somefoo bar',
             new Foo().run(['bar']));
     });
 

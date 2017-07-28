@@ -1,6 +1,7 @@
 const {
     Container,
-    Help
+    Help,
+    commands
 } = require('../../index.js');
 
 const Commit = require('./commit');
@@ -21,8 +22,10 @@ Git.define({
         fetch: Fetch,
         pull: Pull,
         remote: Remote,
-        submodule: Submodule
-    }
+        submodule: Submodule,
+        version: commands.Version
+    },
+    logo: true
 });
 
 module.exports = Git;

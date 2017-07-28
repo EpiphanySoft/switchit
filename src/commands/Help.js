@@ -29,6 +29,7 @@ class Help extends Command {
         if (params.markdown && params.html) {
             this.raise('Conflicting switches "markdown" and "html" specify only one.');
         }
+        this.root().skipLogo();
     }
 
     execute (params) {

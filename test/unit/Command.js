@@ -457,6 +457,111 @@ describe('Command', function() {
             new Foo().run([]));
     });
 
+    describe('Program logo', () => {
+        it('should show a command logo if logo is set to true', (done) => {
+            class Foo extends Command {
+                execute () {}
+            }
+
+            Foo.define({
+                logo: true
+            });
+
+            Util.resolves(done, Util.capturesStdout(() => {
+                return new Foo().run([]);
+            }).then(out => {
+                expect(out).to.contain('foo');
+            }));
+        });
+
+        it('should accept a string as logo configuration', (done) => {
+            class Foo extends Command {
+                execute () {}
+            }
+
+            Foo.define({
+                logo: 'Awesome'
+            });
+
+            Util.resolves(done, Util.capturesStdout(() => {
+                return new Foo().run([]);
+            }).then(out => {
+                expect(out).to.contain('Awesome');
+            }));
+        });
+
+        it('should accept an object as logo configuration', (done) => {
+            class Foo extends Command {
+                execute () {}
+            }
+
+            Foo.define({
+                logo: {
+                    name: 'Abc',
+                    version: '1.2.3'
+                }
+            });
+
+            Util.resolves(done, Util.capturesStdout(() => {
+                return new Foo().run([]);
+            }).then(out => {
+                expect(out).to.contain('Abc v1.2.3');
+            }));
+        });
+
+        it('should accept an object with just version as logo configuration', (done) => {
+            class Foo extends Command {
+                execute () {}
+            }
+
+            Foo.define({
+                logo: {
+                    version: '1.2.3'
+                }
+            });
+
+            Util.resolves(done, Util.capturesStdout(() => {
+                return new Foo().run([]);
+            }).then(out => {
+                expect(out).to.contain('foo v1.2.3');
+            }));
+        });
+
+        it('should ignore incomplete configuration', (done) => {
+            class Foo extends Command {
+                execute () {}
+            }
+
+            Foo.define({
+                logo: {
+                    
+                }
+            });
+
+            Util.resolves(done, Util.capturesStdout(() => {
+                return new Foo().run([]);
+            }).then(out => {
+                expect(out).not.to.contain('foo');
+            }));
+        });
+
+        it('should ignore invalid configuration', (done) => {
+            class Foo extends Command {
+                execute () {}
+            }
+
+            Foo.define({
+                logo: 123
+            });
+
+            Util.resolves(done, Util.capturesStdout(() => {
+                return new Foo().run([]);
+            }).then(out => {
+                expect(out).not.to.contain('foo');
+            }));
+        });
+    });
+
     describe('Variadic', () => {
         describe('Switches', () => {
             it('should accumulate vargs switches', function (done) {

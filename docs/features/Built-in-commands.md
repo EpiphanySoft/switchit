@@ -1,4 +1,5 @@
-# Built-in help command
+# Built-in commands
+## Help command
 Command containers automatically provide basic help output when no command is specified. Using our
 previous `coffeehouse-simple.js` example, check this out:
 
@@ -13,13 +14,13 @@ previous `coffeehouse-simple.js` example, check this out:
      Syntax:
        coffeehouse [subcommand]
 
-## Including the help command
+### Including the help command
 Help can also be included as a command on your program, here we've added it to our
 `coffeehouse-simple.js` example and is available at [`../examples/help.js`](../../examples/help.js):
     
     const {
         //...
-        Help                    // <- Import Help from switchit 
+        commands                    // <- Import commands from switchit 
     } = require('switchit');
     
     // ...
@@ -28,7 +29,7 @@ Help can also be included as a command on your program, here we've added it to o
         commands: {
             coffee: BrewCoffee,
             tea: BrewTea,
-            help: Help          // <- Add it as a command
+            help: commands.Help          // <- Add it as a command
         }
     });
     
@@ -59,5 +60,29 @@ output of the help command.
      Syntax:
        git commit [options]
 
-## Runtime options
-TODO
+## Version command
+The version command reads your project version from `package.json` and displays it.
+
+## Including the version command
+Version can be included as a command on your program:
+    
+    const {
+        //...
+        commands                    // <- Import commands from switchit 
+    } = require('switchit');
+    
+    // ...
+    
+    MyProgram.define({
+        commands: {
+            // commands go here
+            version: commands.Version          // <- Add it as a command
+        }
+    });
+    
+    //...
+
+After this change, you can use the `version` command:
+
+    $ node myprogram.js version
+      myprogram - 1.0.0

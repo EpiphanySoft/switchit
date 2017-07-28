@@ -127,7 +127,7 @@ class Container extends Cmdlet {
                 cmd.destroy();
             }).then(v => {
                 me._result = v;
-
+                
                 // Loop back on ourselves. We check for *and* and *then* at the
                 // front of this method.
                 return me.dispatch(args);
