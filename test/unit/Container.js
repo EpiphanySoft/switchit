@@ -517,7 +517,8 @@ describe('Container', function() {
             Util.resolves(done, Util.capturesStdout(() => {
                 return foo.run([]);
             }).then(out => {
-                expect(out).to.contain('Syntax\n  foo [command]');
+                console.log(out);
+                expect(out).to.contain('Syntax\n\n  foo [command]');
             }));
         });
     });

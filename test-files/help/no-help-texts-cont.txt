@@ -1,11 +1,14 @@
 BarNoHelp
 Syntax
+
   bar [options] [command] Executes a command
 
 Available options:
+
   · --rst (string)          (default: test)
 
 Available commands:
+
   · uvw                     
 
 Run BarNoHelp help [command] for more information on a command.

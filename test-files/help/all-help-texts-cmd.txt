@@ -1,8 +1,11 @@
 bar uvw: The quick
+
 Syntax
+
   bar uvw [options] [lmn] [opq...]
 
 Available options:
+
   · --abc (string)          brown fox
                               (default: foo)
   · --def (number)          jumps over

@@ -121,14 +121,14 @@ class Help extends Command {
             let params = [];
             parameters.forEach((parameter) => {
                 if (!parameter) return;
-                params.push(`${parameter.optional ? '[' : ''}${parameter.name}${parameter.vargs ? '...' : ''}${parameter.optional ? ']' : ''}`)
+                params.push(`${parameter.optional ? '[' : ''}${parameter.name}${parameter.vargs ? '...' : ''}${parameter.optional ? ']' : ''}`);
             });
             name = `${name} ${params.join(' ')}`;
         }
         return {
             name: this.code(name),
             help: help ? this.em(help) : ''
-        }
+        };
     }
 
     showOptions (params) {
@@ -141,7 +141,7 @@ class Help extends Command {
             aspects.switches.sort((a,b) => {
                 if (!a || !b) return 0;
                 return a.name > b.name;
-            }).forEach((s) => { if (s) {switchCount++;} })
+            }).forEach((s) => { if (s) {switchCount++;} });
 
             if (switchCount > 0) {
                 me.out.appendLn(this.h2('Available options:'));
@@ -202,7 +202,7 @@ class Help extends Command {
         return {
             name: `${this.code(name)}${isContainer ? ' ' + chalk.cyan('»') : ''}`,
             help: `${help}${aliases.length > 0 ? '\n(also known as: ' + aliases.join(', ') + ')': ''}`
-        }
+        };
     }
 
     printOutput () {

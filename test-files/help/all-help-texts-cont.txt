@@ -1,12 +1,15 @@
-Bar: The quick brown fox
+Bar
+
+  The quick brown fox
+
 Syntax
   bar [options] [command] Executes a command
 
-Available options:
+Options:
   · --rst (string)          jumps over the lazy dog.
                               (default: test)         
 
-Available commands:
+Commands:
   · uvw                     The quick
 
-Run Bar help [command] for more information on a command.
+Run bar help [command] for more information on a command.

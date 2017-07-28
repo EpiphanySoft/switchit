@@ -1,12 +1,16 @@
 baz bar: The quick brown fox
+
 Syntax
+
   baz bar [options] [command] Executes a command
 
 Available options:
+
   · --rst (string)          jumps over the lazy dog.
                               (default: test)
 
 Available commands:
+
   · uvw                     The quick
 
 Run Baz bar help [command] for more information on a command.

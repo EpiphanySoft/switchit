@@ -1,8 +1,11 @@
 barnohelp uvw
+
 Syntax
+
   barnohelp uvw [options] [lmn] [opq...]
 
 Available options:
+
   · --abc (string)          (default: foo)
   · --def (number)          (required)
   · --ijk (string)          (default: [])
