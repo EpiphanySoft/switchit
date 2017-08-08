@@ -1,10 +1,12 @@
 "use strict";
 
+const Arguments = require('./Arguments');
 const Cmdlet = require('./Cmdlet');
 const Commands = require('./Commands');
 const Util = require('./Util');
 
 const Help = require('./commands/Help');
+const Version = require('./commands/Version');
 
 class Container extends Cmdlet {
     static defineAspect (name, value) {
@@ -58,8 +60,53 @@ class Container extends Cmdlet {
         return this.constructor.commands;
     }
 
+    configure (args) {
+        var me = this;
+        var commands = me.commands;
+        var switches = me.switches;
+
+        if (me.atRoot()) {
+            if (!commands.$rootEnabled) {
+                commands.$rootEnabled = true;
+                if (!commands.lookup('help')) {
+                    commands.add('help', {
+                        type: Help,
+                        private: true
+                    });
+                }
+                if (!commands.lookup('version')) {
+                    commands.add('version', {
+                        type: Version,
+                        private: true
+                    });
+                }
+            }
+        
+            if (!switches.$rootEnabled) {
+                switches.$rootEnabled = true;
+                if (!switches.lookup('v')) {
+                    switches.add('[v#version:boolean=false]');
+                    this.constructor.defineItemHelp('version', 'Show version');
+                }
+                if (!switches.lookup('h')) {
+                    switches.add('[h#help:boolean=false]');
+                    this.constructor.defineItemHelp('help', 'Show help');
+                }
+            }
+        }
+        return super.configure(args);
+    }
+
     execute (params, args) {
         var me = this;
+
+        if (params.version) {
+            params.version = false;
+            args = new Arguments(['version']);
+        } else if (params.help) {
+            params.help = false;
+            args = new Arguments(['help']);
+        }
 
         return args.pull().then(arg => {
             let counter = me._counter;  // 0 the first time in...

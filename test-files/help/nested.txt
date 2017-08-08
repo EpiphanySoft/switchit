@@ -8,8 +8,12 @@ Usage
 
 Options:
 
+  · -h, --help            (boolean) Show help
+                              (default: false)
   · --rst                   (string) jumps over the lazy dog.
                               (default: test)
+  · -v, --version         (boolean) Show version
+                              (default: false)
 
 Commands:
 

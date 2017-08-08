@@ -442,17 +442,6 @@ class Cmdlet {
             missing: 0
         };
 
-        if (this.atRoot()) {
-            this.pkgConfig = File.from(require.main.filename).upTo('package.json').load();
-            // This is to avoid examples loading the main project package.json info
-            if (this.pkgConfig.name === 'switchit') {
-                this.pkgConfig = {};
-            }
-            if (!this.pkgConfig.name) {
-                this.pkgConfig.name = this.constructor.name.toLowerCase();
-            }
-        }
-
         return args.pull().then(arg => {
             // While we have arguments, try to process them
             if (arg !== null) {
@@ -529,6 +518,18 @@ class Cmdlet {
         var params = me.params;
 
         args.ownerPush(me);
+
+        if (this.atRoot()) { 
+            this.rootDir = File.from(require.main.filename).upTo('package.json').parent; 
+            this.pkgConfig = this.rootDir.join('package.json').load(); 
+            // This is to avoid examples loading the main project package.json info 
+            if (this.pkgConfig.name === 'switchit') { 
+                this.pkgConfig = {}; 
+            } 
+            if (!this.pkgConfig.name) { 
+                this.pkgConfig.name = this.constructor.name.toLowerCase(); 
+            } 
+        }
 
         return Util.finally(me.configure(args).then(() => {
             me.applyDefaults(params);

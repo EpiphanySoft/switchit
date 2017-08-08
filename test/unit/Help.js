@@ -244,7 +244,7 @@ describe('Help', function () {
             return def.run(['help', '-color']);
         }).then(out => {
             expect(out).to.contain('def                     Run command abc');
-            expect(out).to.contain('def [command]');
+            expect(out).to.contain('def [options] [command] Runs [command]');
         }));
     });
 
@@ -357,29 +357,6 @@ describe('Help', function () {
         }));
     });
 
-    it('should not show "Options" if all switches are private', function (done) {
-        class Abc extends Container {}
-
-        Abc.define({
-            switches: {
-                foo: {
-                    value: false,
-                    private: true
-                }
-            },
-            commands: {
-                help: Help
-            }
-        });
-
-        var abc = new Abc();
-
-        Util.resolves(done, Util.capturesStdout(() => {
-            return abc.run(['help', '-color']);
-        }).then(out => {
-            expect(out).not.to.contain("Options:");
-        }));
-    });
     it('should provide a way to display all elements (private and special)', function (done) {
         class Abc extends Command {}
         class Def extends Command {}
