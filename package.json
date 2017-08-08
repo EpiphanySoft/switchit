@@ -44,7 +44,8 @@
     "marked": "^0.3.6",
     "marked-terminal": "^2.0.0",
     "phylo": "^0.0.2",
-    "semver": "^5.3.0"
+    "semver": "^5.3.0",
+    "wrap-ansi": "^3.0.1"
   },
   "nyc": {
     "exclude": [
@@ -55,7 +56,8 @@
       "test{,-*}.js",
       "**/*.test.js",
       "**/__tests__/**",
-      "**/node_modules/**"
+      "**/node_modules/**",
+      "playground.js"
     ],
     "all": true,
     "reporter": [

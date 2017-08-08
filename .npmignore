@@ -1,13 +1,14 @@
+.nyc_output
 assets
 coverage
 docs
 examples
 test
 test-files
-.codeclimate.yml
 .eslintrc.json
 .gitignore
 .travis.yml
 CODE_OF_CONDUCT.md
 CONTRIBUTING.md
 gulpfile.js
+playground.js

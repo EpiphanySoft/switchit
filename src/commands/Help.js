@@ -5,6 +5,7 @@ const marked = require('marked');
 const chalk = require('chalk');
 const MarkedTerminal = require('marked-terminal');
 const stripAnsi = require('strip-ansi');
+const wrapAnsi = require('wrap-ansi'); 
 
 const Container = require('../Container');
 const Command = require('../Command');
@@ -15,12 +16,14 @@ class Help extends Command {
             config: {
                 name: {
                     minWidth: 25
+                }, 
+                help: { 
+                    maxWidth: 50
                 }
             },
             preserveNewLines: true,
-            maxWidth: 80,
             showHeaders: false
-        }).split("\n").map((line) => `${' '.repeat(linePadding)}${line.trim().startsWith('(') ? ' '.repeat(linePrefix.length) : linePrefix}${line}`).join("\n");
+        }).split("\n").map((line) => `${' '.repeat(linePadding)}${line.startsWith(' ') || line.trim().startsWith('(') ? ' '.repeat(linePrefix.length) : linePrefix}${line}`).join("\n");
     }
     // --------------------------------
 
@@ -76,19 +79,27 @@ class Help extends Command {
 
     showHeader (params) {
         let me = this,
-            root = me.root().constructor,
+            root = me.root(),
+            rootCls = root.constructor,
+            pkg = root.pkgConfig,
             target = params.target,
             name = target.name,
             help = target.help;
 
-        if (root === target) {
+        if (rootCls === target) {
             params.subject = [name];
-        }
-        else if (target.isContainer || target.isCommand) {
-            params.subject.unshift(root.name.toLowerCase());
+        } else { 
+            params.subject.unshift(rootCls.name.toLowerCase()); 
         }
 
-        this.out.appendLn(this.h1(`${me.bold(params.subject.join(' '))}${help ? ': ' + help : ''}`)).appendLn();
+        if (rootCls === target) {
+            this.out.appendLn(this.h1(root.logo));
+        } else {
+            this.out.appendLn(this.h2(`${params.subject.join(' ').toLowerCase()}`));
+        } 
+        if (help) { 
+            this.out.appendLn(`  ${help}`); 
+        }
     }
 
     showSyntax (params) {
@@ -97,7 +108,7 @@ class Help extends Command {
             target = params.target,
             aspects = target.getAspects(params.all);
 
-        this.out.appendLn(this.h2('Syntax'));
+        this.out.appendLn(this.h2('Usage'));
 
         let syntaxParts = [];
         if (target.isContainer) {
@@ -106,7 +117,7 @@ class Help extends Command {
             }
         }
 
-        syntaxParts.push(this.buildSyntaxPart(fullName, '', aspects.switches.length, target.isContainer, aspects.parameters));
+        syntaxParts.push(this.buildSyntaxPart(fullName, 'Runs [command]', aspects.switches.length, target.isContainer, aspects.parameters));
         this.out.appendLn(Help.columnify(syntaxParts)).appendLn();
     }
 
@@ -116,7 +127,6 @@ class Help extends Command {
         }
         if (isContainer) {
             name = `${name} [command]`;
-            help = 'Executes a command';
         }
         else if (parameters.length > 0) {
             let params = [];
@@ -128,7 +138,7 @@ class Help extends Command {
         }
         return {
             name: this.code(name),
-            help: help ? this.em(help) : ''
+            help: `${help}` || ''
         };
     }
 
@@ -145,15 +155,16 @@ class Help extends Command {
             }).forEach((s) => { if (s) {switchCount++;} });
 
             if (switchCount > 0) {
-                me.out.appendLn(this.h2('Available options:'));
+                me.out.appendLn(this.h2('Options:'));
                 let options = [];
                 aspects.switches.forEach(function (option) {
                     if (!option) return;
-                    options.push(me.buildOptionPart(option.name, option.type, option.help, option.value, option.vargs));
+                    options.push(me.buildOptionPart(option));
                 });
                 options.forEach(function (opt) {
-                    opt.name = `${opt.name} (${opt.type})`;
+                    opt.help = `${chalk.dim(`_(${opt.type + (opt.vargs ? '...' : '')})_`)} ${opt.help}`;
                     delete opt.type;
+                    delete opt.vargs;
                 });
                 me.out.appendLn(Help.columnify(options, 2, '· ')).appendLn();
             }
@@ -161,11 +172,19 @@ class Help extends Command {
         }
     }
 
-    buildOptionPart (name, type, help='', value, vargs) {
+    buildOptionPart (option) {
+        let name = option.name;
+        let type = option.type;
+        let help = option.help || '';
+        let value = option.value;
+        let vargs = option.vargs;
+        let char = option.char;
+        let required = option.required;
         return {
-            name: this.code(`--${name}`),
+            name: (char ? this.code(`-${char}`) + ', ' : '') + this.code(`--${name}`),
             type: `${type}`,
-            help: this.em(`${help}${(value !== undefined) ? (!!help ? '\n' : '') + '(default: ' + (vargs ? '[]' : value) + ')' : (!!help ? '\n' : '') + '(required)'}`)
+            vargs: option.vargs,
+            help: `${help}${(value !== undefined) ? (!!help ? '\n' : '') + chalk.dim('_(default: ' + (vargs ? '[]' : value) + ')_') : (required ? (!!help ? '\n' : '') + chalk.dim('_(required)_') : '')}` 
         };
     }
 
@@ -184,7 +203,7 @@ class Help extends Command {
             }).forEach((c) => { if (c) {commandCount++;} });
 
             if (commandCount > 0) {
-                me.out.append(this.h2("Available commands"));
+                me.out.append(this.h2("Commands"));
                 if (hasContainers) {
                     me.out.append(` (${chalk.cyan('»')}: has sub-commands)`);
                 }
@@ -199,10 +218,10 @@ class Help extends Command {
         }
     }
 
-    buildCommandPart (name, help = '', isContainer = false, aliases = []) {
+    buildCommandPart (name, help = '', isContainer = false, aliases) {
         return {
             name: `${this.code(name)}${isContainer ? ' ' + chalk.cyan('»') : ''}`,
-            help: `${help}${aliases.length > 0 ? '\n(also known as: ' + aliases.join(', ') + ')': ''}`
+            help: `${help}${aliases.length > 0 ? '\n'+ chalk.dim('_(also known as: ' + aliases.join(', ') + ')_'): ''}`
         };
     }
 
@@ -213,7 +232,9 @@ class Help extends Command {
             if (!this.params.html) {
                 marked.setOptions({
                     renderer: new MarkedTerminal({
-                        showSectionPrefix: false
+                        showSectionPrefix: false,
+                        firstHeading: chalk.bold,
+                        heading: t => t
                     })
                 });
             } else {
@@ -228,7 +249,7 @@ class Help extends Command {
             out = stripAnsi(out);
         }
 
-        console.log(out.split('\n').map((l) => l.replace(/\s+$/, '')).join('\n'));
+        console.log(out.split('\n').map((l) => l.replace(/\s+$/, '')).join('\n').trim()); 
     }
 }
 
@@ -267,14 +288,6 @@ Object.assign(Help.prototype, {
 
     h2 (str) {
         return `## ${str}`;
-    },
-
-    bold (str) {
-        return `**${str}**`;
-    },
-
-    em (str) {
-        return `*${str}*`;
     },
 
     code (str) {

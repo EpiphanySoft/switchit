@@ -519,7 +519,7 @@ describe('Container', function() {
                 return foo.run([]);
             }).then(out => {
                 console.log(out);
-                expect(out).to.contain('Syntax\n\n  foo [command]');
+                expect(out).to.contain('Usage\n\n  foo [command]');
             }));
         });
     });

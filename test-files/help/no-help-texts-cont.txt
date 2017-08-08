@@ -1,14 +1,15 @@
-BarNoHelp
-Syntax
+barnohelp
 
-  bar [options] [command] Executes a command
+Usage
 
-Available options:
+  barnohelp [options] [command]
 
-  · --rst (string)          (default: test)
+Options:
 
-Available commands:
+  · --rst                   (string) (default: test)
+
+Commands:
 
   · uvw                     
 
-Run BarNoHelp help [command] for more information on a command.
+Run barnohelp help [command] for more information on a command.

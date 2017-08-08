@@ -1,12 +1,13 @@
-Bar
+bar
 
   The quick brown fox
 
-Syntax
-  bar [options] [command] Executes a command
+Usage:
+
+  bar [options] [command]
 
 Options:
-  · --rst (string)          jumps over the lazy dog.
+  · --rst                   (string) jumps over the lazy dog.
                               (default: test)         
 
 Commands:

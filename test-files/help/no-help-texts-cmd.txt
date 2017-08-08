@@ -1,11 +1,11 @@
 barnohelp uvw
 
-Syntax
+Usage
 
-  barnohelp uvw [options] [lmn] [opq...]
+  barnohelp uvw [options] [lmn] [opq...] Runs [command]
 
-Available options:
+Options:
 
-  · --abc (string)          (default: foo)
-  · --def (number)          (required)
-  · --ijk (string)          (default: [])
+  · --abc                   (string) (default: foo)
+  · --def                   (number) (required)
+  · --ijk                   (string...) (default: [])

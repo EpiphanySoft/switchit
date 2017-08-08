@@ -46,7 +46,7 @@ class Command extends Cmdlet {
     }
 
     static getAspects (includePrivate = true) {
-        return Object.assign(super.getAspects(), {
+        return Object.assign(super.getAspects(includePrivate), {
             command: true,
             parameters: this.parameters.items.map((p) => {
                 if (!p.private || includePrivate) return p;

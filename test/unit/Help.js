@@ -116,7 +116,11 @@ Bar.define({
     },
     commands: {
         uvw: Foo,
+        xyz: 'uvw',
         help: Help
+    }, 
+    logo: {
+        version: '1.0.0'
     }
 });
 
@@ -185,7 +189,8 @@ describe('Help', function () {
         class Baz extends Container {}
         Baz.define({
             commands: {
-                bar: Bar
+                bar: Bar,
+                asd: 'bar'
             }
         });
         Util.resolves(done, Util.capturesStdout(() => {
@@ -239,7 +244,7 @@ describe('Help', function () {
             return def.run(['help', '-color']);
         }).then(out => {
             expect(out).to.contain('def                     Run command abc');
-            expect(out).to.contain('def [command]           Executes a command');
+            expect(out).to.contain('def [command]');
         }));
     });
 
@@ -269,7 +274,7 @@ describe('Help', function () {
         }));
     });
 
-    it('should not show "Available commands" if all commands are private or "special" (default, help)', function (done) {
+    it('should not show "Commands" if all commands are private or "special" (default, help)', function (done) {
         class Abc extends Command {}
         class Def extends Command {}
         class Ghi extends Container {}
@@ -298,11 +303,61 @@ describe('Help', function () {
         Util.resolves(done, Util.capturesStdout(() => {
             return ghi.run(['help', '-color']);
         }).then(out => {
-            expect(out).not.to.contain("Available commands:");
+            expect(out).not.to.contain("Commands:");
         }));
     });
 
-    it('should not show "Available options" if all switches are private', function (done) {
+    it('should not show private switches nor parameters', function (done) {
+        class Abc extends Command {}
+        class Def extends Command {}
+        class Ghi extends Container {}
+
+        Abc.define({
+            help: 'Run command abc',
+            switches: {
+                test: {
+                    type: 'string',
+                    value: '123'
+                },
+                priv: {
+                    private: true,
+                    value: false,
+                    type: 'boolean'
+                },
+                foo: {
+                    type: 'string',
+                    value: '456'
+                }
+            },
+            parameters: {
+                asdf: {
+                    type: 'string',
+                    value: '123'
+                },
+                privateParam: {
+                    private: true
+                }
+            }
+        });
+
+        Ghi.define({
+            commands: {
+                abc: Abc,
+                help: Help
+            }
+        });
+
+        var ghi = new Ghi();
+
+        Util.resolves(done, Util.capturesStdout(() => {
+            return ghi.run(['help', 'abc', '-color']);
+        }).then(out => {
+            expect(out).not.to.contain("--priv");
+            expect(out).not.to.contain("privateParam");
+        }));
+    });
+
+    it('should not show "Options" if all switches are private', function (done) {
         class Abc extends Container {}
 
         Abc.define({
@@ -322,7 +377,7 @@ describe('Help', function () {
         Util.resolves(done, Util.capturesStdout(() => {
             return abc.run(['help', '-color']);
         }).then(out => {
-            expect(out).not.to.contain("Available options:");
+            expect(out).not.to.contain("Options:");
         }));
     });
     it('should provide a way to display all elements (private and special)', function (done) {

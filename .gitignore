@@ -7,3 +7,5 @@ coverage
 .DS_Store
 /yarn.lock
 .nyc_output
+
+playground.js
