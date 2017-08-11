@@ -1,5 +1,7 @@
 "use strict";
 
+const File = require('phylo');
+const path = require('path');
 const semver = require('semver');
 
 /**
@@ -192,6 +194,38 @@ class NumberType extends Type {
     }
 }
 
+class PathType extends Type {
+    constructor () {
+        super({
+            default: '',
+            name: 'path',
+            help: 'A path relative to the location the script is executed at'
+        });
+    }
+
+    convert (value) {
+        if (Array.isArray(value)) {
+            return value.map(value => this.convert(value));
+        }
+
+        value = this.parse(value);
+
+        return File.from(value);
+    }
+
+    parse (value) {
+        if (value == null || value === false || typeof value === 'function') {
+            return null;
+        }
+
+        return String(value);
+    }
+
+    is () {
+        return false;
+    }
+}
+
 class StringType extends Type {
     constructor () {
         super({
@@ -237,6 +271,7 @@ class SemverType extends Type {
 
 Type.define(new BooleanType());
 Type.define(new NumberType());
+Type.define(new PathType());
 Type.define(new StringType());
 Type.define(new SemverType());
 

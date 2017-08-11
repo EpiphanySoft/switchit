@@ -66,7 +66,7 @@ describe('Type', () => {
                     let v = Type.boolean.convert(capit);
                     expect(v).to.be(value);
                 });
-            })
+            });
         });
     });
 
@@ -120,6 +120,166 @@ describe('Type', () => {
 
         it('should handle zero', () => {
             expect(Type.number.convert(0)).to.be(0);
+        });
+    });
+
+    describe('Path', () => {
+        const cwd  = process.cwd();
+        const path = Type.get('path');
+
+        it('should handle null', () => {
+            const test = path.convert(null);
+
+            expect(test).to.be(null);
+        });
+
+        it('should handle undefined', () => {
+            const test = path.convert(undefined);
+
+            expect(test).to.be(null);
+        });
+
+        it('should handle empty string', () => {
+            const test = path.convert('');
+
+            expect(test).to.be(null);
+        });
+
+        it('should handle strings of spaces', () => {
+            const test = path.convert('   ');
+
+            expect(test).to.have.property('path', '   ');
+            expect(test.absolutify()).to.have.property('path', `${cwd}/   `);
+        });
+
+        it('should handle letters', () => {
+            const test = path.convert('abc');
+
+            expect(test).to.have.property('path', 'abc');
+            expect(test.absolutify()).to.have.property('path', `${cwd}/abc`);
+        });
+
+        it('should not be relative to cwd', () => {
+            const test = path.convert('/foo/bar');
+
+            expect(test).to.have.property('path', '/foo/bar');
+            expect(test.absolutify()).to.have.property('path', `/foo/bar`);
+        });
+
+        it('should handle letters and numbers', () => {
+            const test = path.convert('1a');
+
+            expect(test).to.have.property('path', '1a');
+            expect(test.absolutify()).to.have.property('path', `${cwd}/1a`);
+        });
+
+        it('should handle non-zero numbers', () => {
+            const test1 = path.convert(1);
+            const test2 = path.convert(3.14);
+
+            expect(test1).to.have.property('path', '1');
+            expect(test1.absolutify()).to.have.property('path', `${cwd}/1`);
+
+            expect(test2).to.have.property('path', '3.14');
+            expect(test2.absolutify()).to.have.property('path', `${cwd}/3.14`);
+        });
+
+        it('should handle zero', () => {
+            const test = path.convert(0);
+
+            expect(test).to.have.property('path', '0');
+            expect(test.absolutify()).to.have.property('path', `${cwd}/0`);
+        });
+
+        describe('array', () => {
+            it('should handle null', () => {
+                const value = [ null ];
+
+                expect(path.convert(value)).to.eql([ null ]);
+            });
+
+            it('should handle undefined', () => {
+                const value = [ undefined ];
+
+                expect(path.convert(value)).to.eql([ null ]);
+            });
+
+            it('should handle empty string', () => {
+                const value = [ '' ];
+
+                expect(path.convert(value)).to.eql([ null ]);
+            });
+
+            it('should handle strings of spaces', () => {
+                const value = [ '   ' ];
+
+                expect(path.convert(value)).to.eql([
+                    { path : '   ' }
+                ]);
+            });
+
+            it('should handle letters', () => {
+                const value = [ 'a/bc' ];
+
+                expect(path.convert(value)).to.eql([
+                    { path : 'a/bc' }
+                ]);
+            });
+
+            it('should handle letters and numbers', () => {
+                const value = [ '1/a' ];
+
+                expect(path.convert(value)).to.eql([
+                    { path : '1/a' }
+                ]);
+            });
+
+            it('should handle non-zero numbers', () => {
+                const value = [ 1, 3.14 ];
+
+                expect(path.convert(value)).to.eql([
+                    { path : '1' },
+                    { path : '3.14' }
+                ]);
+            });
+
+            it('should handle zero', () => {
+                const value = [ 0 ];
+
+                expect(path.convert(value)).to.eql([
+                    { path : '0' }
+                ]);
+            });
+        });
+
+        describe('is', () => {
+            it('should recognize a string', () => {
+                expect(path.is('./foo')).to.be(false);
+            });
+
+            it('should recognize only a dot', () => {
+                expect(path.is('.')).to.be(false);
+            });
+
+            it('should not recognize a bool', () => {
+                expect(path.is(true)).to.be(false);
+            });
+
+            it('should not recognize a number', () => {
+                expect(path.is(10)).to.be(false);
+            });
+
+            it('should not recognize an array', () => {
+                expect(path.is([ 'foo' ])).to.be(false);
+            });
+
+            it('should not recognize an object', () => {
+                expect(path.is({ foo: 'bar' })).to.be(false);
+            });
+
+            it('should not recognize a function', () => {
+                expect(path.is( () => {} )).to.be(false);
+            });
         });
     });
 
